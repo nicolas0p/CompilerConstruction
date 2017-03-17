@@ -1,6 +1,7 @@
 %{
 #include <iostream>
 #include <stdio.h>
+#include "parser.tab.h"
 using namespace std;
 #define YY_DECL extern "C" int yylex()
 %}

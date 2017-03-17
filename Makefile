@@ -4,7 +4,7 @@ EXEC=parser
 
 make: $(EXEC)
 	flex lex.l
-	bison parser.y
+	bison -d parser.y
 	$(CC) $(CFLAGS) -o $(EXEC) lex.yy.c parse.tab.c
 
 clean:
