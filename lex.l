@@ -1,15 +1,15 @@
 %{
 #include <iostream>
-#include <stdio.h>
-#include "parser.tab.h"
 using namespace std;
+#include "parser.tab.h"
 #define YY_DECL extern "C" int yylex()
+
+#include "parser.tab.h" //token types
+
 %}
 %%
-
-%token //tokens go here, e.g. ID INT FLOAT
-
-[ \t\n]		    ; //ignore spaces, tabs and new lines
-[0-9]+\.[0-9]+	{cout << "FLOAT";}
-[0-9]+          {cout << "INT";}
+[ \t\n]			;
+[0-9]+\.[0-9]+  {yylval.fval = atof(yytext); return FLOAT; }
+[0-9]+          {yylval.ival = atoi(yytext); return INT; }
+[a-zA-Z0-9]+	{yylval.sval = strdup(yytext); return STRING; }
 %%

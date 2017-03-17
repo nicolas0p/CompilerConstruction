@@ -1,10 +1,17 @@
 %{
 #include <stdio.h>
 #include <string.h>
+#include <iostream>
+using namespace std;
+
+extern "C" int yylex();
+extern "C" int yyparse();
+extern "C" FILE *yyin;
 
 void yyerror(const char *str)
 {
-    fprintf(stderr, "error: %s\n", str);
+	cout << "EEK, parse error! Message: " << str << endl;
+	exit(-1);
 }
 
 int yywrap()
@@ -12,16 +19,41 @@ int yywrap()
     return 1;
 }
 
-int main()
-{
-    yyparse();
-}
 %}
 
-%token INT FLOAT AND COMP
+%union {
+	int ival;
+	float fval;
+	char *sval;
+}
 
-%left AND
-%left COMP
+%token <ival> INT
+%token <fval> FLOAT
+%token <sval> STRING
 
 %%
-expression: INT | FLOAT
+expression:
+		  INT expression { cout << "INT: " << $1 << endl; }
+		  | FLOAT expression { cout << "FLOAT: " << $1 << endl; }
+		  | STRING expression { cout << "STRING: " << $1 << endl; }
+		  | INT { cout << "INT: " << $1 << endl; }
+		  | FLOAT { cout << "FLOAT: " << $1 << endl; }
+		  | STRING { cout << "STRING: " << $1 << endl; }
+		  ;
+%%
+
+int main(int, char**) {
+	// open a file handle to a particular file:
+	FILE *myfile = fopen("teste.cy", "r");
+	// make sure it is valid:
+	if (!myfile) {
+		cout << "I can't open the file!" << endl;
+		return -1;
+	}
+	// set flex to read from it instead of defaulting to STDIN:
+	yyin = myfile;
+	// parse through the input until there is no more:
+	do {
+		yyparse();
+	} while (!feof(yyin));
+}

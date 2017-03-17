@@ -1,11 +1,11 @@
 CC=g++
-CFLAGS=-Wall -g
-EXEC=parser
+CFLAGS=-Wall -g -lfl
+EXEC=final
 
-make: $(EXEC)
+make: lex.l parser.y
 	flex lex.l
 	bison -d parser.y
-	$(CC) $(CFLAGS) -o $(EXEC) lex.yy.c parse.tab.c
+	$(CC) -o $(EXEC) lex.yy.c parser.tab.c $(CFLAGS)
 
 clean:
-	rm $(EXEC)
+	rm lex.yy.c parser.tab.c parser.tab.h $(EXEC)
