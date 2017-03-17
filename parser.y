@@ -33,9 +33,9 @@ int yywrap()
 
 %%
 expression:
-		  INT expression { cout << "INT: " << $1 << endl; }
-		  | FLOAT expression { cout << "FLOAT: " << $1 << endl; }
-		  | STRING expression { cout << "STRING: " << $1 << endl; }
+		  expression INT { cout << "INT: " << $2 << endl; }
+		  | expression FLOAT { cout << "FLOAT: " << $2 << endl; }
+		  | expression STRING { cout << "STRING: " << $2 << endl; }
 		  | INT { cout << "INT: " << $1 << endl; }
 		  | FLOAT { cout << "FLOAT: " << $1 << endl; }
 		  | STRING { cout << "STRING: " << $1 << endl; }
