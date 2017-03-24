@@ -3,49 +3,53 @@
 using namespace std;
 #define YY_DECL extern "C" int yylex()
 
-#include "parser.tab.h" //token types
-
+//#include "parser.tab.h"
+#include <iostream>
+using namespace std;
 %}
 %%
-[ \t\n]			;
+[ \t]			{cout << " ";}
+[\n]			{cout << endl;}
+"true"			{cout << "TRUE";}
+"false"			{cout << "FALSE";}
+"for"			{cout << "FOR";}
+"if"			{cout << "IF";}
+"else"			{cout << "ELSE";}
+"while"			{cout << "WHILE";}
+"return"		{cout << "RETURN";}
+"break"			{cout << "BREAK";}
+"struct"		{cout << "STRUCT";}
+"void"			{cout << "VOID";}
+"main"			{cout << "MAIN";}
+"num"			{cout << "NUM";}
+"char"			{cout << "CHAR";}
+"boolean"		{cout << "BOOLEAN";}
 
-"true"			{yylval.bval = true; return TRUE;}
-"false"			{yylval.bval = false; return FALSE;}
-"for"			{return FOR;}
-"if"			{return IF;}
-"else"			{return ELSE;}
-"while"			{return WHILE;}
-"return"		{return RETURN;}
-"break"			{return BREAK;}
-"struct"		{return STRUCT;}
-"void"			{return VOID;}
-"main"			{return MAIN;}
+[0-9]+\.[0-9]+  {cout << "FLOATLITERAL";}
+[0-9]+          {cout << "INTLITERAL";}
+\"[a-zA-Z0-9]+\" {cout << "STRINGLITERAL";}
+\'[a-zA-Z]\'	{cout << "CHARLITERAL";}
+[a-zA-Z]+		{cout << "ID";}
 
-[0-9]+\.[0-9]+  {yylval.fval = atof(yytext); return FLOAT;}
-[0-9]+          {yylval.ival = atoi(yytext); return INT;}
-\"[a-zA-Z0-9]+\" {yylval.sval = strdup(yytext); return STRING;}
-\'[a-zA-Z]\'	{yylval.sval = strdup(yytext); return CHAR;}
-[a-zA-Z]+		{yylval.sval = strdup(yytext); return ID;}
-
-";"				{return SEMICOLON;}
-","				{return COMMA;}
-"."				{return PERIOD;}
-"("				{return OP_PARENS;}
-")"				{return CL_PARENS;}
-"["				{return OP_SQUARE;}
-"]"				{return CL_SQUARE;}
-"{"				{return OP_CURLY;}
-"}"				{return CL_CURLY;}
-"="				{return EQUAL;}
-"!"				{return NOT;}
-">"				{return GREATER;}
-"<"				{return LESS;}
-"&"				{return AND;}
-"|"				{return OR;}
-"+"				{return PLUS;}
-"-"				{return MINUS;}
-"*"				{return TIMES;}
-"/"				{return DIVIDED;}
-"%"				{return MOD;}
+";"				{cout << "SEMICOLON";}
+","				{cout << "COMMA";}
+"."				{cout << "PERIOD";}
+"("				{cout << "OP_PARENS";}
+")"				{cout << "CL_PARENS";}
+"["				{cout << "OP_SQUARE";}
+"]"				{cout << "CL_SQUARE";}
+"{"				{cout << "OP_CURLY";}
+"}"				{cout << "CL_CURLY";}
+"="				{cout << "EQUAL";}
+"!"				{cout << "NOT";}
+">"				{cout << "GREATER";}
+"<"				{cout << "LESS";}
+"&"				{cout << "AND";}
+"|"				{cout << "OR";}
+"+"				{cout << "PLUS";}
+"-"				{cout << "MINUS";}
+"*"				{cout << "TIMES";}
+"/"				{cout << "DIVIDED";}
+"%"				{cout << "MOD";}
 
 %%
