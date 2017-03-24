@@ -28,12 +28,13 @@ int yywrap()
 	bool bval;
 }
 
-%token <ival> INT
-%token <fval> FLOAT
-%token <sval> STRING
+%token <ival> INTLITERAL
+%token <fval> FLOATLITERAL
+%token <sval> STRINGLITERAL
 %token <sval> ID
-%token <sval> CHAR
-%token <bval> BOOLEAN
+%token <sval> CHARLITERAL
+%token <bval> BOOLEANLITERAL
+%token INT FLOAT BOOLEAN CHAR
 %token TRUE FALSE FOR IF ELSE WHILE RETURN BREAK STRUCT VOID MAIN NUM
 %token SEMICOLON COMMA PERIOD
 %token OP_PARENS CL_PARENS OP_SQUARE CL_SQUARE OP_CURLY CL_CURLY
@@ -237,16 +238,6 @@ NUMLITERAL:
 		| FLOAT
 		;
 
-/*VVVVVV EXEMPLO! VVVVVVV
-expression:
-		  expression INT { cout << "INT: " << $2 << endl; }
-		  | expression FLOAT { cout << "FLOAT: " << $2 << endl; }
-		  | expression STRING { cout << "STRING: " << $2 << endl; }
-		  | INT { cout << "INT: " << $1 << endl; }
-		  | FLOAT { cout << "FLOAT: " << $1 << endl; }
-		  | STRING { cout << "STRING: " << $1 << endl; }
-		  ;
-*/
 %%
 
 int main(int, char**) {

@@ -20,11 +20,14 @@ using namespace std;
 "struct"		{return STRUCT;}
 "void"			{return VOID;}
 "main"			{return MAIN;}
+"num"			{return NUM;}
+"boolean"		{return BOOLEAN;}
+"char"			{return CHAR;}
 
-[0-9]+\.[0-9]+  {yylval.fval = atof(yytext); return FLOAT;}
-[0-9]+          {yylval.ival = atoi(yytext); return INT;}
-\"[a-zA-Z0-9]+\" {yylval.sval = strdup(yytext); return STRING;}
-\'[a-zA-Z]\'	{yylval.sval = strdup(yytext); return CHAR;}
+[0-9]+\.[0-9]+  {yylval.fval = atof(yytext); return FLOATLITERAL;}
+[0-9]+          {yylval.ival = atoi(yytext); return INTLITERAL;}
+\"[a-zA-Z0-9]+\" {yylval.sval = strdup(yytext); return STRINGLITERAL;}
+\'[a-zA-Z]\'	{yylval.sval = strdup(yytext); return CHARLITERAL;}
 [a-zA-Z]+		{yylval.sval = strdup(yytext); return ID;}
 
 ";"				{return SEMICOLON;}
@@ -45,7 +48,7 @@ using namespace std;
 "+"				{return PLUS;}
 "-"				{return MINUS;}
 "*"				{return TIMES;}
-"/"				{return DIVIDED;}
+"/"				{return DIVIDE;}
 "%"				{return MOD;}
 
 %%
