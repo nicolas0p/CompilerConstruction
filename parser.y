@@ -35,6 +35,11 @@ int yywrap()
 %token <sval> CHAR
 %token <bval> BOOLEAN
 %token TRUE FALSE FOR IF ELSE WHILE RETURN BREAK STRUCT VOID MAIN NUM
+%token SEMICOLON COMMA PERIOD
+%token OP_PARENS CL_PARENS OP_SQUARE CL_SQUARE OP_CURLY CL_CURLY
+%token EQUAL NOT GREATER LESS AND OR
+%token PLUS MINUS TIMES DIVIDE MOD
+
 
 
 %%
@@ -45,38 +50,38 @@ program:
 declarations:
 		declarations functionDeclaration
 		/* empty */
-		| ";"
+		|
 		;
 
 functionDeclaration:
-		returnType ID '('parameters')' '{'statementList'}'
+		returnType ID OP_PARENS parameters CL_PARENS OP_CURLY statementList CL_CURLY
 		;
 
 parameters:
 		paramList
 		/* empty */
-		| ";"
+		|
 		;
 
 paramList:
-		paramList ',' typeSpecifier ID
+		paramList COMMA typeSpecifier ID
 		| typeSpecifier ID
 		;
 
 main:
-		NUM MAIN '('mainParameters')' '{'statementList'}' 
+		NUM MAIN OP_PARENS mainParameters CL_PARENS OP_CURLY statementList CL_CURLY
 		;
 
 mainParameters:
-		NUM ID ',' CHAR'['']' ID
+		NUM ID COMMA CHAR OP_SQUARE CL_SQUARE ID
 		/* empty */
-		| ";"
+		|
 		;
 
 statementList:
 		statementList statement
 		/* empty */
-		| ";"
+		|
 		;
 
 statement:
@@ -92,60 +97,60 @@ statement:
 		;
 
 variableDeclaration:
-		typeSpecifier ID';'
-		| typeSpecifier variableAttribution';'
+		typeSpecifier ID SEMICOLON
+		| typeSpecifier variableAttribution SEMICOLON
 		;
 
 variableAttribution:
-		ID '=' expression
+		ID EQUAL expression
 		;
 
 loopStatement:
-		FOR'('variableAttribution';'booleanExpression';'variableAttribution')''{'statementList'}'
-		| WHILE'('booleanExpression')''{'statementList'}'
+		FOR OP_PARENS variableAttribution SEMICOLON booleanExpression SEMICOLON variableAttribution CL_PARENS OP_CURLY statementList CL_CURLY
+		| WHILE OP_PARENS booleanExpression CL_PARENS OP_CURLY statementList CL_CURLY
 		;
 
 functionCall:
-		ID'('args')'':'
+		ID OP_PARENS args CL_PARENS SEMICOLON
 		;
 
 args:
 		argList
 		/* empty */
-		| ";"
+		|
 		;
 
 argList:
-		argList',' expression
+		argList COMMA  expression
 		| expression
 
 breakStatement:
-		BREAK';'
+		BREAK SEMICOLON
 		;
 
 returnStatement:
-		RETURN';'
-		| RETURN expression';'
+		RETURN SEMICOLON
+		| RETURN expression SEMICOLON
 		;
 
 structDeclaration:
-		STRUCT ID'{'variableDeclarationNoValueList'}'';'
+		STRUCT ID OP_CURLY variableDeclarationNoValueList CL_CURLY SEMICOLON
 		;
 
 variableDeclarationNoValueList:
-		variableDeclarationNoValueList typeSpecifier ID';'
-		| typeSpecifier ID ';'
+		variableDeclarationNoValueList typeSpecifier ID SEMICOLON
+		| typeSpecifier ID SEMICOLON
 		;
 
 conditionalStatement:
-		IF '('booleanExpression')''{'statementList'}'
-		| IF '('booleanExpression')''{'statementList'}' ELSE conditionalStatement
-		| IF '('booleanExpression')''{'statementList'}' ELSE '{'statementList'}'
+		IF OP_PARENS booleanExpression CL_PARENS OP_CURLY statementList CL_CURLY
+		| IF OP_PARENS booleanExpression CL_PARENS OP_CURLY statementList CL_CURLY ELSE conditionalStatement
+		| IF OP_PARENS booleanExpression CL_PARENS OP_CURLY statementList CL_CURLY ELSE OP_CURLY statementList CL_CURLY
 		;
 
 expressionStatement:
-		expression';'
-		| ';'
+		expression SEMICOLON
+		| SEMICOLON
 		;
 
 returnType:
@@ -161,8 +166,8 @@ typeSpecifier:
 
 mutable:
 		ID
-		| mutable'['numExpression']'
-		| mutable'.'ID
+		| mutable OP_SQUARE numExpression CL_SQUARE
+		| mutable PERIOD ID
 
 expression:
 		booleanExpression
@@ -174,15 +179,15 @@ booleanExpression:
 		;
 
 boolOp:
-		'&''&'
-		| '|''|'
+		AND AND
+		| OR OR
 		;
 
 unaryBoolExpression:
-		'!'booleanExpression
+		NOT booleanExpression
 		| relExpression
 		| mutable
-		| '('booleanExpression')'
+		| OP_PARENS booleanExpression CL_PARENS
 		| functionCall
 		| TRUE
 		| FALSE
@@ -193,12 +198,12 @@ relExpression:
 		;
 
 relOp:
-		'=''='
-		| '!''='
-		| '>'
-		| '>''='
-		| '<'
-		| '<''='
+		EQUAL EQUAL
+		| NOT EQUAL
+		| GREATER
+		| GREATER EQUAL
+		| LESS
+		| LESS EQUAL
 		;
 
 numExpression:
@@ -207,24 +212,24 @@ numExpression:
 		;
 
 numOp:
-		'+'
-		| '-'
-		| '*'
-		| '/'
-		| '%'
+		PLUS
+		| MINUS
+		| TIMES
+		| DIVIDE
+		| MOD
 		;
 
 unaryNumExpression:
 		unaryNumOp unaryNumExpression
 		| mutable
-		| '('numExpression')'
+		| OP_PARENS numExpression CL_PARENS
 		| functionCall
 		| NUMLITERAL
 		;
 
 unaryNumOp:
-		'+'
-		| '-'
+		PLUS
+		| MINUS
 		;
 
 NUMLITERAL:

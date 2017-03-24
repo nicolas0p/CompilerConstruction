@@ -4,7 +4,7 @@ EXEC=final
 
 make: lex.l parser.y
 	flex lex.l
-	bison -d parser.y
+	bison -d parser.y -v
 	$(CC) -o $(EXEC) lex.yy.c parser.tab.c $(CFLAGS)
 
 clean:
