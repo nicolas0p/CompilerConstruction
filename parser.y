@@ -8,6 +8,7 @@ extern "C" int yylex();
 extern "C" int yyparse();
 extern "C" FILE *yyin;
 
+
 void yyerror(const char *str)
 {
 	cout << "EEK, parse error! Message: " << str << endl;
@@ -240,9 +241,16 @@ NUMLITERAL:
 
 %%
 
-int main(int, char**) {
+int main(int argc, char** argv) {
+#if YYDEBUG == 1
+yydebug = 1;
+#endif
 	// open a file handle to a particular file:
-	FILE *myfile = fopen("teste.cy", "r");
+	if (argc < 2){
+		cout << "No file specified."<< endl;
+		return 1;
+	}
+	FILE *myfile = fopen(argv[1], "r");
 	// make sure it is valid:
 	if (!myfile) {
 		cout << "I can't open the file!" << endl;
