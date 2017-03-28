@@ -36,7 +36,7 @@ int yywrap()
 %token <sval> CHARLITERAL
 %token <bval> BOOLEANLITERAL
 %token NUM BOOLEAN CHAR
-%token TRUE FALSE FOR IF ELSE WHILE RETURN BREAK STRUCT VOID MAIN NUM
+%token TRUE FALSE FOR IF ELSE WHILE RETURN BREAK STRUCT VOID MAIN
 %token SEMICOLON COMMA PERIOD
 %token OP_PARENS CL_PARENS OP_SQUARE CL_SQUARE OP_CURLY CL_CURLY
 %token EQUAL NOT_EQUAL NOT GREATER LESS AND OR GREATER_EQ LESS_EQ
@@ -101,8 +101,13 @@ statement:
 		;
 
 variableDeclaration:
-		typeSpecifier ID SEMICOLON
-		| typeSpecifier variableAttribution SEMICOLON
+		typeSpecifier ID variableDeclaration1
+		;
+
+/*created to remove ambiguity*/
+variableDeclaration1:
+		SEMICOLON
+		| ATTRIBUTION expression SEMICOLON
 		;
 
 variableAttribution:
@@ -125,7 +130,7 @@ args:
 		;
 
 argList:
-		argList COMMA  expression
+		argList COMMA expression
 		| expression
 
 breakStatement:
@@ -133,8 +138,12 @@ breakStatement:
 		;
 
 returnStatement:
-		RETURN SEMICOLON
-		| RETURN expression SEMICOLON
+		RETURN returnStatement1
+		;
+
+returnStatement1:
+		SEMICOLON
+		| expression SEMICOLON
 		;
 
 structDeclaration:
@@ -171,8 +180,12 @@ typeSpecifier:
 
 mutable:
 		ID
-		| mutable OP_SQUARE numExpression CL_SQUARE
-		| mutable PERIOD ID
+		| mutable mutable1
+		;
+
+mutable1:
+		OP_SQUARE numExpression CL_SQUARE
+		| PERIOD ID
 		;
 
 expression:
