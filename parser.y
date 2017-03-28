@@ -35,7 +35,7 @@ int yywrap()
 %token <sval> ID
 %token <sval> CHARLITERAL
 %token <bval> BOOLEANLITERAL
-%token INT FLOAT BOOLEAN CHAR
+%token NUM BOOLEAN CHAR
 %token TRUE FALSE FOR IF ELSE WHILE RETURN BREAK STRUCT VOID MAIN NUM
 %token SEMICOLON COMMA PERIOD
 %token OP_PARENS CL_PARENS OP_SQUARE CL_SQUARE OP_CURLY CL_CURLY
@@ -167,15 +167,20 @@ typeSpecifier:
 		| BOOLEAN
 		| CHAR
 		| ID
+		;
 
 mutable:
 		ID
 		| mutable OP_SQUARE numExpression CL_SQUARE
 		| mutable PERIOD ID
+		;
 
 expression:
 		booleanExpression
 		| numExpression
+		| STRINGLITERAL
+		| CHARLITERAL
+		;
 
 booleanExpression:
 		booleanExpression boolOp unaryBoolExpression
@@ -183,8 +188,8 @@ booleanExpression:
 		;
 
 boolOp:
-		AND AND
-		| OR OR
+		AND
+		| OR
 		;
 
 unaryBoolExpression:
@@ -228,17 +233,17 @@ unaryNumExpression:
 		| mutable
 		| OP_PARENS numExpression CL_PARENS
 		| functionCall
-		| NUMLITERAL
+		| numLiteral
+		;
+
+numLiteral:
+		INTLITERAL
+		| FLOATLITERAL
 		;
 
 unaryNumOp:
 		PLUS
 		| MINUS
-		;
-
-NUMLITERAL:
-		INT
-		| FLOAT
 		;
 
 %%
