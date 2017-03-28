@@ -17,4 +17,4 @@ debug: lex.l parser.y
 	$(CC) -o $(EXEC) lex.yy.c parser.tab.c $(CFLAGS) $(DEBUGFLAGS)
 
 clean:
-	rm lex.yy.c parser.tab.c parser.tab.h $(EXEC)
+	rm -f lex.yy.c parser.tab.c parser.tab.h parser.output $(EXEC)

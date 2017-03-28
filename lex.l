@@ -30,6 +30,10 @@ using namespace std;
 \'[a-zA-Z]\'	{yylval.sval = strdup(yytext); return CHARLITERAL;}
 [a-zA-Z]+		{yylval.sval = strdup(yytext); return ID;}
 
+">="				{return GREATER_EQ;}
+"<="				{return LESS_EQ;}
+"=="				{return EQUAL;}
+"!="				{return NOT_EQUAL;}
 ";"				{return SEMICOLON;}
 ","				{return COMMA;}
 "."				{return PERIOD;}
@@ -39,12 +43,12 @@ using namespace std;
 "]"				{return CL_SQUARE;}
 "{"				{return OP_CURLY;}
 "}"				{return CL_CURLY;}
-"="				{return EQUAL;}
+"="				{return ATTRIBUTION;}
 "!"				{return NOT;}
 ">"				{return GREATER;}
 "<"				{return LESS;}
-"&"				{return AND;}
-"|"				{return OR;}
+"&&"				{return AND;}
+"||"				{return OR;}
 "+"				{return PLUS;}
 "-"				{return MINUS;}
 "*"				{return TIMES;}

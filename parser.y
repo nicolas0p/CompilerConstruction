@@ -12,7 +12,7 @@ extern "C" FILE *yyin;
 void yyerror(const char *str)
 {
 	cout << "EEK, parse error! Message: " << str << endl;
-	exit(-1);
+	//exit(-1);
 }
 
 int yywrap()
@@ -39,10 +39,12 @@ int yywrap()
 %token TRUE FALSE FOR IF ELSE WHILE RETURN BREAK STRUCT VOID MAIN NUM
 %token SEMICOLON COMMA PERIOD
 %token OP_PARENS CL_PARENS OP_SQUARE CL_SQUARE OP_CURLY CL_CURLY
-%token EQUAL NOT GREATER LESS AND OR
+%token EQUAL NOT_EQUAL NOT GREATER LESS AND OR GREATER_EQ LESS_EQ
+%token ATTRIBUTION
 %token PLUS MINUS TIMES DIVIDE MOD
 
-
+%left PLUS MINUS
+%left TIMES DIVIDE MOD
 
 %%
 program:
@@ -104,7 +106,7 @@ variableDeclaration:
 		;
 
 variableAttribution:
-		ID EQUAL expression
+		ID ATTRIBUTION expression
 		;
 
 loopStatement:
@@ -200,12 +202,12 @@ relExpression:
 		;
 
 relOp:
-		EQUAL EQUAL
-		| NOT EQUAL
+		EQUAL
+		| NOT_EQUAL
 		| GREATER
-		| GREATER EQUAL
+		| GREATER_EQ
 		| LESS
-		| LESS EQUAL
+		| LESS_EQ
 		;
 
 numExpression:
