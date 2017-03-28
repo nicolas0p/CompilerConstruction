@@ -31,6 +31,10 @@ using namespace std;
 \'[a-zA-Z]\'	{cout << "CHARLITERAL";}
 [a-zA-Z]+		{cout << "ID";}
 
+">="				{cout << "GREATER_EQ";}
+"<="				{cout << "LESS_EQ";}
+"=="
+"!="
 ";"				{cout << "SEMICOLON";}
 ","				{cout << "COMMA";}
 "."				{cout << "PERIOD";}
@@ -44,8 +48,8 @@ using namespace std;
 "!"				{cout << "NOT";}
 ">"				{cout << "GREATER";}
 "<"				{cout << "LESS";}
-"&"				{cout << "AND";}
-"|"				{cout << "OR";}
+"&&"				{cout << "AND";}
+"||"				{cout << "OR";}
 "+"				{cout << "PLUS";}
 "-"				{cout << "MINUS";}
 "*"				{cout << "TIMES";}

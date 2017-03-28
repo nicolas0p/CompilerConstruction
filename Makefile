@@ -2,10 +2,9 @@ CC=g++
 CFLAGS=-Wall -g -lfl
 EXEC=final
 
-make: lex.l parser.y
+make: lex.l
 	flex lex.l
-	bison -d parser.y -v
-	$(CC) -o $(EXEC) lex.yy.c parser.tab.c $(CFLAGS)
+	$(CC) -o $(EXEC) lex.yy.c $(CFLAGS)
 
 clean:
-	rm lex.yy.c parser.tab.c parser.tab.h $(EXEC)
+	rm -f lex.yy.c parser.tab.c parser.tab.h parser.output $(EXEC)
