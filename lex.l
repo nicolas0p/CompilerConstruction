@@ -30,29 +30,29 @@ using namespace std;
 \'[a-zA-Z]\'	{yylval.sval = strdup(yytext); return CHARLITERAL;}
 [a-zA-Z]+		{yylval.sval = strdup(yytext); return ID;}
 
-">="				{return GREATER_EQ;}
-"<="				{return LESS_EQ;}
-"=="				{return EQUAL;}
-"!="				{return NOT_EQUAL;}
-";"				{return SEMICOLON;}
-","				{return COMMA;}
-"."				{return PERIOD;}
-"("				{return OP_PARENS;}
-")"				{return CL_PARENS;}
-"["				{return OP_SQUARE;}
-"]"				{return CL_SQUARE;}
-"{"				{return OP_CURLY;}
-"}"				{return CL_CURLY;}
-"="				{return ATTRIBUTION;}
-"!"				{return NOT;}
-">"				{return GREATER;}
-"<"				{return LESS;}
-"&&"				{return AND;}
-"||"				{return OR;}
-"+"				{return PLUS;}
-"-"				{return MINUS;}
-"*"				{return TIMES;}
-"/"				{return DIVIDE;}
-"%"				{return MOD;}
+">="			{return GREATER_EQ;}
+"<="			{return LESS_EQ;}
+"=="			{return EQUAL;}
+"!="			{return NOT_EQUAL;}
+";"			{return SEMICOLON;}
+","			{return COMMA;}
+"."			{return PERIOD;}
+"("			{return OP_PARENS;}
+")"			{return CL_PARENS;}
+"["			{return OP_SQUARE;}
+"]"			{return CL_SQUARE;}
+"{"			{return OP_CURLY;}
+"}"			{return CL_CURLY;}
+"="			{return ATTRIBUTION;}
+"!"			{return NOT;}
+">"			{return GREATER;}
+"<"			{return LESS;}
+"&&"			{return AND;}
+"||"			{return OR;}
+"+"			{return PLUS;}
+"-"			{return MINUS;}
+"*"			{return TIMES;}
+"/"			{return DIVIDE;}
+"%"			{return MOD;}
 
 %%
