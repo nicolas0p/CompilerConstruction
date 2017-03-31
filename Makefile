@@ -1,6 +1,6 @@
 CC=g++
 CFLAGS=-Wall -g -lfl
-EXEC=final
+EXEC=scanner
 
 make: lex.l
 	flex lex.l

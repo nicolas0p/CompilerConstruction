@@ -1,5 +1,6 @@
 %{
 #include <iostream>
+#include <stdio.h>
 using namespace std;
 #define YY_DECL extern "C" int yylex()
 
@@ -57,3 +58,25 @@ using namespace std;
 "%"				{cout << "MOD";}
 
 %%
+
+int main(int argc, char** argv) {
+	// open a file handle to a particular file:
+	if (argc < 2){
+		cout << "No file specified. Entering interactive mode:"<< endl;
+		yylex();
+	}
+	else {
+		FILE *myfile = fopen(argv[1], "r");
+		// make sure it is valid:
+		if (!myfile) {
+			cout << "I can't open the file!" << endl;
+			return -1;
+		}
+		// set flex to read from it instead of defaulting to STDIN:
+		yyin = myfile;
+		// parse through the input until there is no more:
+		do {
+			yylex();
+		} while (!feof(yyin));
+	}
+}
