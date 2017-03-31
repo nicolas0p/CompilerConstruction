@@ -90,9 +90,9 @@ statementList:
 
 statement:
 		variableDeclaration
-		| variableAttribution
+		| variableAttribution SEMICOLON
 		| loopStatement
-		| functionCall
+		| mutableOrFunctionCall
 		| breakStatement
 		| returnStatement
 		| structDeclaration
@@ -119,9 +119,6 @@ loopStatement:
 		| WHILE OP_PARENS booleanExpression CL_PARENS OP_CURLY statementList CL_CURLY
 		;
 
-functionCall:
-		ID OP_PARENS args CL_PARENS SEMICOLON
-		;
 
 args:
 		argList
@@ -178,16 +175,32 @@ typeSpecifier:
 		| ID
 		;
 
-mutable:
-		ID
-		| mutable mutable1
+mutableOrFunctionCall:
+		ID mutableOrFunctionCall1
 		;
 
-mutable1:
-		OP_SQUARE numExpression CL_SQUARE
-		| PERIOD ID
+mutableOrFunctionCall1:
+		OP_PARENS args CL_PARENS
+		| access
+		|
 		;
 
+access:
+		structAccess
+		| arrayAccess
+		;
+
+arrayAccess:
+		OP_SQUARE numExpression CL_SQUARE structAccess
+		;
+
+structAccess:
+		PERIOD ID access
+		|
+		;
+
+
+		
 expression:
 		booleanExpression
 		| numExpression
@@ -208,9 +221,8 @@ boolOp:
 unaryBoolExpression:
 		NOT booleanExpression
 		| relExpression
-		| mutable
+		| mutableOrFunctionCall
 		| OP_PARENS booleanExpression CL_PARENS
-		| functionCall
 		| TRUE
 		| FALSE
 		;
@@ -243,9 +255,8 @@ numOp:
 
 unaryNumExpression:
 		unaryNumOp unaryNumExpression
-		| mutable
+		| mutableOrFunctionCall
 		| OP_PARENS numExpression CL_PARENS
-		| functionCall
 		| numLiteral
 		;
 
