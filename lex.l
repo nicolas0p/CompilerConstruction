@@ -34,8 +34,8 @@ using namespace std;
 
 ">="				{cout << "GREATER_EQ";}
 "<="				{cout << "LESS_EQ";}
-"=="
-"!="
+"=="				{cout << "EQUAL";}
+"!="				{cout << "NOT_EQUAL";}
 ";"				{cout << "SEMICOLON";}
 ","				{cout << "COMMA";}
 "."				{cout << "PERIOD";}
