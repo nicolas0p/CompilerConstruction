@@ -1,7 +1,7 @@
 CC=g++
 CFLAGS=-Wall -g -lfl
 DEBUGFLAGS= -DYYDEBUG=1
-EXEC=final
+EXEC=parser
 
 FLEX= flex
 BISON= bison -d -v

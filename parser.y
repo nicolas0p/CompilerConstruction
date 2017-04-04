@@ -119,7 +119,6 @@ loopStatement:
 		| WHILE OP_PARENS booleanExpression CL_PARENS OP_CURLY statementList CL_CURLY
 		;
 
-
 args:
 		argList
 		/* empty */
@@ -129,6 +128,7 @@ args:
 argList:
 		argList COMMA expression
 		| expression
+		;
 
 breakStatement:
 		BREAK SEMICOLON
@@ -199,8 +199,6 @@ structAccess:
 		|
 		;
 
-
-		
 expression:
 		booleanExpression
 		| numExpression
