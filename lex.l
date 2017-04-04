@@ -25,8 +25,8 @@ using namespace std;
 
 [0-9]+\.[0-9]+  	{yylval.fval = atof(yytext); return FLOATLITERAL;}
 [0-9]+          	{yylval.ival = atoi(yytext); return INTLITERAL;}
-\"[a-zA-Z0-9]+\" 	{yylval.sval = strdup(yytext); return STRINGLITERAL;}
-\'[a-zA-Z]\'		{yylval.sval = strdup(yytext); return CHARLITERAL;}
+\"(\\.|[^\\"])*\" 	{yylval.sval = strdup(yytext); return STRINGLITERAL;}
+'(\\.|[^\\'])'		{yylval.sval = strdup(yytext); return CHARLITERAL;}
 [a-zA-Z]+		{yylval.sval = strdup(yytext); return ID;}
 
 ">="			{return GREATER_EQ;}
