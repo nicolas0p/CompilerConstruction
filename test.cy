@@ -8,7 +8,7 @@ void func()
 {
 	num abcd;
 	abcd = 13;
-	bool not = true;
+	boolean not = true;
 	if(abcd == 12 || not == false){
 		return abcd * 3;
 	}
@@ -18,8 +18,8 @@ void func()
 }
 
 num main() {
-	bool a = true;
-	char[] name = "grupo 6";
+	boolean a = true;
+	char[] name = "grupo 6.$";
 	num flt = 1.563;
 	for(num i = 0 ; i < 6 ; i = i + 1) {
 		a = !a;

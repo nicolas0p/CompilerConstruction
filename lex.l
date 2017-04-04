@@ -1,13 +1,21 @@
 %{
 #include <iostream>
 #include <stdio.h>
+#include <stdarg.h>
 using namespace std;
 #define YY_DECL extern "C" int yylex()
 
 //#include "parser.tab.h"
 #include <iostream>
+
+extern int yylineno;
+
 using namespace std;
+void yyerror(const char* s, ...);
 %}
+
+%option noyywrap nodefault yylineno
+
 %%
 [ \t]			{cout << " ";}
 [\n]			{cout << endl;}
@@ -26,10 +34,10 @@ using namespace std;
 "char"			{cout << "CHAR";}
 "boolean"		{cout << "BOOLEAN";}
 
-[0-9]+\.[0-9]+  {cout << "FLOATLITERAL(" << yytext << ")";}
-[0-9]+          {cout << "INTLITERAL(" << yytext << ")";}
-\"[a-zA-Z0-9]+\" {cout << "STRINGLITERAL(" << yytext << ")";}
-\'[a-zA-Z]\'	{cout << "CHARLITERAL(" << yytext << ")";}
+[0-9]+\.[0-9]+  	{cout << "FLOATLITERAL(" << yytext << ")";}
+[0-9]+          	{cout << "INTLITERAL(" << yytext << ")";}
+\"(\\.|[^\\"])*\" 	{cout << "STRINGLITERAL(" << yytext << ")";}
+'(\\.|[^\\'])'		{cout << "CHARLITERAL(" << yytext << ")";}
 [a-zA-Z]+		{cout << "ID";}
 
 ">="				{cout << "GREATER_EQ";}
@@ -57,7 +65,15 @@ using namespace std;
 "/"				{cout << "DIVIDED";}
 "%"				{cout << "MOD";}
 
+.				{yyerror("Unknown token! %c\n", *yytext);}
 %%
+
+void yyerror(const char* s, ...) {
+	va_list ap;
+	va_start(ap, s);
+	fprintf(stderr, "Line %d: error ", yylineno);
+	vfprintf(stderr, s, ap);
+}
 
 int main(int argc, char** argv) {
 	// open a file handle to a particular file:
