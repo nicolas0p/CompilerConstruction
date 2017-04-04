@@ -26,10 +26,10 @@ using namespace std;
 "char"			{cout << "CHAR";}
 "boolean"		{cout << "BOOLEAN";}
 
-[0-9]+\.[0-9]+  {cout << "FLOATLITERAL";}
-[0-9]+          {cout << "INTLITERAL";}
-\"[a-zA-Z0-9]+\" {cout << "STRINGLITERAL";}
-\'[a-zA-Z]\'	{cout << "CHARLITERAL";}
+[0-9]+\.[0-9]+  {cout << "FLOATLITERAL(" << yytext << ")";}
+[0-9]+          {cout << "INTLITERAL(" << yytext << ")";}
+\"[a-zA-Z0-9]+\" {cout << "STRINGLITERAL(" << yytext << ")";}
+\'[a-zA-Z]\'	{cout << "CHARLITERAL(" << yytext << ")";}
 [a-zA-Z]+		{cout << "ID";}
 
 ">="				{cout << "GREATER_EQ";}
