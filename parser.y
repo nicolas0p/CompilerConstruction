@@ -199,29 +199,47 @@ structAccess:
 		;
 
 expression:
-		booleanExpression
-		| numExpression
+		booleanExpression boolOp NOT booleanExpression
+		| booleanExpression boolOp relExpression
+		| booleanExpression boolOp mutableOrFunctionCall
+		| booleanExpression boolOp OP_PARENS booleanExpression CL_PARENS
+		| booleanExpression boolOp TRUE
+		| booleanExpression boolOp FALSE
+		| NOT booleanExpression
+		| relExpression
+		| OP_PARENS booleanExpression CL_PARENS
+		| TRUE
+		| FALSE
+		| numExpression numOp unaryNumOp unaryNumExpression
+		| numExpression numOp mutableOrFunctionCall
+		| numExpression numOp OP_PARENS numExpression CL_PARENS
+		| numExpression numOp numLiteral
+		| unaryNumOp unaryNumExpression
+		| mutableOrFunctionCall
+		| OP_PARENS numExpression CL_PARENS
+		| numLiteral
 		| STRINGLITERAL
 		| CHARLITERAL
 		;
 
 booleanExpression:
-		booleanExpression boolOp unaryBoolExpression
-		| unaryBoolExpression
-		;
-
-boolOp:
-		AND
-		| OR
-		;
-
-unaryBoolExpression:
-		NOT booleanExpression
+		booleanExpression boolOp NOT booleanExpression
+		| booleanExpression boolOp relExpression
+		| booleanExpression boolOp mutableOrFunctionCall
+		| booleanExpression boolOp OP_PARENS booleanExpression CL_PARENS
+		| booleanExpression boolOp TRUE
+		| booleanExpression boolOp FALSE
+		| NOT booleanExpression
 		| relExpression
 		| mutableOrFunctionCall
 		| OP_PARENS booleanExpression CL_PARENS
 		| TRUE
 		| FALSE
+		;
+
+boolOp:
+		AND
+		| OR
 		;
 
 relExpression:
@@ -238,8 +256,14 @@ relOp:
 		;
 
 numExpression:
-		numExpression numOp unaryNumExpression
-		| unaryNumExpression
+		numExpression numOp unaryNumOp unaryNumExpression
+		| numExpression numOp mutableOrFunctionCall
+		| numExpression numOp OP_PARENS numExpression CL_PARENS
+		| numExpression numOp numLiteral
+		| unaryNumOp unaryNumExpression
+		| mutableOrFunctionCall
+		| OP_PARENS numExpression CL_PARENS
+		| numLiteral
 		;
 
 numOp:
