@@ -34,7 +34,6 @@ int yywrap()
 %token <sval> STRINGLITERAL
 %token <sval> ID
 %token <sval> CHARLITERAL
-%token <bval> BOOLEANLITERAL
 %token NUM BOOLEAN CHAR
 %token TRUE FALSE FOR IF ELSE WHILE RETURN BREAK STRUCT VOID MAIN
 %token SEMICOLON COMMA PERIOD

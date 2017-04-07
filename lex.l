@@ -8,8 +8,8 @@ using namespace std;
 %}
 %%
 [ \t\n]			;
-"true"			{yylval.bval = true; return TRUE;}
-"false"			{yylval.bval = false; return FALSE;}
+"true"			{return TRUE;}
+"false"			{return FALSE;}
 "for"			{return FOR;}
 "if"			{return IF;}
 "else"			{return ELSE;}
