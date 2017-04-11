@@ -42,8 +42,8 @@ int yywrap()
 %token ATTRIBUTION
 %token PLUS MINUS TIMES DIVIDE MOD
 
-%left PLUS MINUS
-%left TIMES DIVIDE MOD
+%left PLUS MINUS OR
+%left TIMES DIVIDE MOD AND
 
 %%
 program:
@@ -190,7 +190,6 @@ mutableOrFunctionCall:
 mutableOrFunctionCall1:
 		OP_PARENS args CL_PARENS
 		| access
-		|
 		;
 
 access:
