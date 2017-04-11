@@ -218,11 +218,11 @@ expression:
 		| OP_PARENS booleanExpression CL_PARENS
 		| TRUE
 		| FALSE
-		| numExpression numOp unaryNumOp unaryNumExpression
+		| numExpression numOp unaryNumExpression
 		| numExpression numOp mutableOrFunctionCall
 		| numExpression numOp OP_PARENS numExpression CL_PARENS
 		| numExpression numOp numLiteral
-		| unaryNumOp unaryNumExpression
+		| unaryNumExpression
 		| mutableOrFunctionCall
 		| OP_PARENS numExpression CL_PARENS
 		| numLiteral
@@ -264,11 +264,11 @@ relOp:
 		;
 
 numExpression:
-		numExpression numOp unaryNumOp unaryNumExpression
+		numExpression numOp unaryNumExpression
 		| numExpression numOp mutableOrFunctionCall
 		| numExpression numOp OP_PARENS numExpression CL_PARENS
 		| numExpression numOp numLiteral
-		| unaryNumOp unaryNumExpression
+		| unaryNumExpression
 		| mutableOrFunctionCall
 		| OP_PARENS numExpression CL_PARENS
 		| numLiteral
