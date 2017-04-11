@@ -152,9 +152,18 @@ variableDeclarationNoValueList:
 		;
 
 conditionalStatement:
-		IF OP_PARENS booleanExpression CL_PARENS OP_CURLY statementList CL_CURLY
-		| IF OP_PARENS booleanExpression CL_PARENS OP_CURLY statementList CL_CURLY ELSE conditionalStatement
-		| IF OP_PARENS booleanExpression CL_PARENS OP_CURLY statementList CL_CURLY ELSE OP_CURLY statementList CL_CURLY
+		IF OP_PARENS booleanExpression CL_PARENS OP_CURLY statementList CL_CURLY conditionalStatement1
+		;
+
+conditionalStatement1:
+		ELSE conditionalStatement2
+		/* empty */
+		|
+		;
+
+conditionalStatement2:
+		conditionalStatement
+		| OP_CURLY statementList CL_CURLY
 		;
 
 expressionStatement:
