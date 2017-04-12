@@ -88,7 +88,7 @@ statementList:
 		;
 
 statement:
-		variableDeclaration
+		variableDeclaration SEMICOLON
 		| variableAttribution SEMICOLON
 		| loopStatement
 		| breakStatement
@@ -104,16 +104,21 @@ variableDeclaration:
 
 /*created to remove ambiguity*/
 variableDeclaration1:
-		SEMICOLON
-		| ATTRIBUTION expression SEMICOLON
+		ATTRIBUTION expression
+		|
 		;
 
 variableAttribution:
 		ID ATTRIBUTION expression
 		;
 
+variableAttrOrDecla:
+		variableDeclaration
+		| variableAttribution
+		;
+
 loopStatement:
-		FOR OP_PARENS variableAttribution SEMICOLON booleanExpression SEMICOLON variableAttribution CL_PARENS OP_CURLY statementList CL_CURLY
+		FOR OP_PARENS variableAttrOrDecla SEMICOLON booleanExpression SEMICOLON variableAttribution CL_PARENS OP_CURLY statementList CL_CURLY
 		| WHILE OP_PARENS booleanExpression CL_PARENS OP_CURLY statementList CL_CURLY
 		;
 
@@ -176,10 +181,15 @@ returnType:
 		;
 
 typeSpecifier:
-		NUM
-		| BOOLEAN
-		| CHAR
+		NUM arrayDef
+		| BOOLEAN arrayDef
+		| CHAR arrayDef
 		| ID
+		;
+
+arrayDef:
+		OP_SQUARE CL_SQUARE
+		|
 		;
 
 mutableOrFunctionCall:
@@ -212,6 +222,7 @@ expression:
 		| FALSE boolRelOp
 		| mutableOrFunctionCall expOp
 		| numLiteral numRelOp
+		| unaryNumOp numExpression
 		| STRINGLITERAL
 		| CHARLITERAL
 		;
