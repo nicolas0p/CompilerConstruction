@@ -91,7 +91,6 @@ statement:
 		variableDeclaration
 		| variableAttribution SEMICOLON
 		| loopStatement
-		| mutableOrFunctionCall
 		| breakStatement
 		| returnStatement
 		| structDeclaration
@@ -207,80 +206,86 @@ structAccess:
 		;
 
 expression:
-		booleanExpression boolOp NOT booleanExpression
-		| booleanExpression boolOp relExpression
-		| booleanExpression boolOp mutableOrFunctionCall
-		| booleanExpression boolOp OP_PARENS booleanExpression CL_PARENS
-		| booleanExpression boolOp TRUE
-		| booleanExpression boolOp FALSE
-		| NOT booleanExpression
-		| relExpression
-		| OP_PARENS booleanExpression CL_PARENS
-		| TRUE
-		| FALSE
-		| numExpression numOp unaryNumExpression
-		| numExpression numOp mutableOrFunctionCall
-		| numExpression numOp OP_PARENS numExpression CL_PARENS
-		| numExpression numOp numLiteral
-		| unaryNumExpression
-		| mutableOrFunctionCall
-		| OP_PARENS numExpression CL_PARENS
-		| numLiteral
+		NOT booleanExpression
+		| OP_PARENS expression CL_PARENS
+		| TRUE boolRelOp
+		| FALSE boolRelOp
+		| mutableOrFunctionCall expOp
+		| numLiteral numRelOp
 		| STRINGLITERAL
 		| CHARLITERAL
 		;
 
+expOp:
+		numOp1
+		| boolOp1
+		| relOp
+		|
+		;
+
+numRelOp:
+		numOp1
+		| relOp
+		|
+		;
+
 booleanExpression:
-		booleanExpression boolOp NOT booleanExpression
-		| booleanExpression boolOp relExpression
-		| booleanExpression boolOp mutableOrFunctionCall
-		| booleanExpression boolOp OP_PARENS booleanExpression CL_PARENS
-		| booleanExpression boolOp TRUE
-		| booleanExpression boolOp FALSE
-		| NOT booleanExpression
-		| relExpression
-		| mutableOrFunctionCall
-		| OP_PARENS booleanExpression CL_PARENS
-		| TRUE
-		| FALSE
+		| NOT booleanExpression boolOp
+		| mutableOrFunctionCall boolRelOp
+		| OP_PARENS booleanExpression CL_PARENS boolOp
+		| TRUE boolOp
+		| FALSE boolOp
 		;
 
 boolOp:
-		AND
-		| OR
+		AND booleanExpression
+		| OR booleanExpression
+		|
 		;
 
-relExpression:
-		numExpression relOp numExpression
+boolOp1:
+		AND booleanExpression
+		| OR booleanExpression
+		;
+
+boolRelOp:
+		boolOp
+		| relOp numExpression boolOp
 		;
 
 relOp:
-		EQUAL
-		| NOT_EQUAL
-		| GREATER
-		| GREATER_EQ
-		| LESS
-		| LESS_EQ
+		EQUAL expression
+		| NOT_EQUAL expression
+		| GREATER expression
+		| GREATER_EQ expression
+		| LESS expression
+		| LESS_EQ expression
 		;
 
 numExpression:
-		numExpression numOp unaryNumExpression
-		| numExpression numOp mutableOrFunctionCall
-		| numExpression numOp OP_PARENS numExpression CL_PARENS
-		| numExpression numOp numLiteral
-		| unaryNumExpression
-		| mutableOrFunctionCall
-		| OP_PARENS numExpression CL_PARENS
-		| numLiteral
+		| unaryNumOp unaryNumExpression numOp
+		| mutableOrFunctionCall numOp
+		| OP_PARENS numExpression CL_PARENS numOp
+		| numLiteral numOp
 		;
 
 numOp:
-		PLUS
-		| MINUS
-		| TIMES
-		| DIVIDE
-		| MOD
+		PLUS numExpression
+		| MINUS numExpression
+		| TIMES numExpression
+		| DIVIDE numExpression
+		| MOD numExpression
+		|
 		;
+
+numOp1:
+		PLUS numExpression
+		| MINUS numExpression
+		| TIMES numExpression
+		| DIVIDE numExpression
+		| MOD numExpression
+		;
+
 
 unaryNumExpression:
 		unaryNumOp unaryNumExpression
