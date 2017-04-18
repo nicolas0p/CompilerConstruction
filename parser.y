@@ -230,8 +230,7 @@ expression:
 		| TRUE boolRelOp
 		| FALSE boolRelOp
 		| mutableOrFunctionCall expOp
-		| numLiteral numRelOp
-		| unaryNumOp numExpression
+		| numExpression numRelOp
 		| STRINGLITERAL
 		| CHARLITERAL
 		;
