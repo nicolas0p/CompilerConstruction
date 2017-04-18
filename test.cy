@@ -4,12 +4,13 @@ num teste(char a, boolean c) {
 	return i + 3.42;
 }
 
-void func()
+num func()
 {
 	num abcd;
 	abcd = 13;
 	bool not = true;
-	if(abcd == 12 || not == false){
+	num b = 1;
+	if(abcd > b + 1 && abcd != 12 || not == false){
 		return abcd * 3;
 	}
 	else {
@@ -19,7 +20,10 @@ void func()
 
 num main() {
 	bool a = true;
+	num in = func() + 4;
+	bool b = -6 > in;
 	char[] name = "grupo 6";
+	name[2] = 'b';
 	num flt = 1.563;
 	for(num i = 0 ; i < 6 ; i = i + 1) {
 		a = !a;
