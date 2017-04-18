@@ -109,8 +109,12 @@ variableDeclaration1:
 		;
 
 variableAttribution:
-		ID ATTRIBUTION expression
+		ID variableAttribution1
 		;
+
+variableAttribution1:
+		ATTRIBUTION expression
+		| arrayAccess ATTRIBUTION expression
 
 variableAttrOrDecla:
 		variableDeclaration
@@ -188,8 +192,13 @@ typeSpecifier:
 		;
 
 arrayDef:
-		OP_SQUARE CL_SQUARE
+		OP_SQUARE arrayDef1
 		|
+		;
+
+arrayDef1:
+		CL_SQUARE
+		| INTLITERAL CL_SQUARE
 		;
 
 mutableOrFunctionCall:
@@ -274,7 +283,7 @@ relOp:
 		;
 
 numExpression:
-		| unaryNumOp unaryNumExpression numOp
+		unaryNumOp unaryNumExpression numOp
 		| mutableOrFunctionCall numOp
 		| OP_PARENS numExpression CL_PARENS numOp
 		| numLiteral numOp
