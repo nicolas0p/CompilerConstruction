@@ -250,7 +250,7 @@ numRelOp:
 		;
 
 booleanExpression:
-		| NOT booleanExpression boolOp
+		NOT booleanExpression boolOp
 		| mutableOrFunctionCall boolRelOp
 		| OP_PARENS booleanExpression CL_PARENS boolOp
 		| TRUE boolOp
