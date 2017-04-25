@@ -205,7 +205,7 @@ mutableOrFunctionCall:
 		;
 
 mutableOrFunctionCall1:
-		OP_PARENS args CL_PARENS
+		OP_PARENS args CL_PARENS access
 		| access
 		;
 

@@ -4,7 +4,7 @@ num teste(char a, boolean c) {
 	return i + 3.42;
 }
 
-num func()
+num[] func()
 {
 	num abcd;
 	abcd = 13;
@@ -21,7 +21,7 @@ num func()
 num main() {
 	teste('i', a < b + 2 && true);
 	bool a = true;
-	num in = func() + 4;
+	num in = func()[5] + 4;
 	bool b = -6 > in;
 	char[] name = "grupo 6";
 	name[2] = 'b';
