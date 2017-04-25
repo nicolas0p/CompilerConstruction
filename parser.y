@@ -230,7 +230,8 @@ expression:
 		| TRUE boolRelOp
 		| FALSE boolRelOp
 		| mutableOrFunctionCall expOp
-		| numExpression numRelOp
+		| numLiteral numRelOp
+		| unaryNumOp numLiteral numRelOp
 		| STRINGLITERAL
 		| CHARLITERAL
 		;
@@ -238,19 +239,20 @@ expression:
 expOp:
 		numOp1
 		| boolOp1
-		| relOp
+		| relOp expression
 		|
 		;
 
 numRelOp:
 		numOp1
-		| relOp
+		| relOp expression
 		|
 		;
 
 booleanExpression:
 		NOT booleanExpression boolOp
 		| mutableOrFunctionCall boolRelOp
+		| numLiteral numOp relOp expression
 		| OP_PARENS booleanExpression CL_PARENS boolOp
 		| TRUE boolOp
 		| FALSE boolOp
@@ -273,12 +275,12 @@ boolRelOp:
 		;
 
 relOp:
-		EQUAL expression
-		| NOT_EQUAL expression
-		| GREATER expression
-		| GREATER_EQ expression
-		| LESS expression
-		| LESS_EQ expression
+		EQUAL
+		| NOT_EQUAL
+		| GREATER
+		| GREATER_EQ
+		| LESS
+		| LESS_EQ
 		;
 
 numExpression:
