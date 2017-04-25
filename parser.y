@@ -271,8 +271,14 @@ boolOp1:
 
 boolRelOp:
 		boolOp
-		| relOp numExpression boolOp
+		| relOp boolRelOp1
 		;
+boolRelOp1:
+		numExpression boolOp
+		| TRUE boolOp
+		| FALSE boolOp
+		;
+
 
 relOp:
 		EQUAL
