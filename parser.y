@@ -128,7 +128,6 @@ loopStatement:
 
 args:
 		argList
-		/* empty */
 		|
 		;
 
@@ -239,24 +238,30 @@ expression:
 expOp:
 		numOp1
 		| boolOp1
-		| relOp expression
+		| relOpNum numExpression boolOp
+		| relOp expression boolOp
 		|
 		;
 
 numRelOp:
 		numOp1
 		| relOp expression
+		| relOpNum numExpression
 		|
 		;
 
 booleanExpression:
 		NOT booleanExpression boolOp
 		| mutableOrFunctionCall boolRelOp
-		| numLiteral numOp relOp expression
+		| numLiteral numOp booleanExpression1
 		| OP_PARENS booleanExpression CL_PARENS boolOp
 		| TRUE boolOp
 		| FALSE boolOp
 		;
+
+booleanExpression1:
+		relOp expression
+		| relOpNum numExpression
 
 boolOp:
 		AND booleanExpression
@@ -272,18 +277,22 @@ boolOp1:
 boolRelOp:
 		boolOp
 		| relOp boolRelOp1
+		| relOpNum numExpression boolOp
 		;
+
 boolRelOp1:
 		numExpression boolOp
 		| TRUE boolOp
 		| FALSE boolOp
 		;
 
-
 relOp:
 		EQUAL
 		| NOT_EQUAL
-		| GREATER
+		;
+
+relOpNum:
+		GREATER
 		| GREATER_EQ
 		| LESS
 		| LESS_EQ

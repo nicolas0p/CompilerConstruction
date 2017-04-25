@@ -10,7 +10,7 @@ num func()
 	abcd = 13;
 	bool not = true;
 	num b = 1;
-	if(abcd > b + 1 && abcd != 12 || not == false){
+	if(abcd < b + 1 && abcd != 12 || not == false){
 		return abcd * 3;
 	}
 	else {
@@ -19,6 +19,7 @@ num func()
 }
 
 num main() {
+	teste('i', a < b + 2 && true);
 	bool a = true;
 	num in = func() + 4;
 	bool b = -6 > in;
