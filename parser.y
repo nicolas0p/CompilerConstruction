@@ -8,12 +8,8 @@ extern "C" int yylex();
 extern "C" int yyparse();
 extern "C" FILE *yyin;
 
-
-void yyerror(const char *str)
-{
-	cout << "EEK, parse error! Message: " << str << endl;
-	//exit(-1);
-}
+extern void yyerror(const char* s);
+extern void print_error(const char* s);
 
 int yywrap()
 {
@@ -21,6 +17,7 @@ int yywrap()
 }
 
 %}
+%define parse.error verbose
 
 %union {
 	int ival;
@@ -52,12 +49,14 @@ program:
 
 declarations:
 		declarations functionDeclaration
+		| declarations structDeclaration
 		/* empty */
 		|
 		;
 
 functionDeclaration:
 		returnType ID OP_PARENS parameters CL_PARENS OP_CURLY statementList CL_CURLY
+		| error OP_CURLY statementList CL_CURLY {print_error("Function declaration: Before '{'");}
 		;
 
 parameters:
@@ -69,10 +68,13 @@ parameters:
 paramList:
 		paramList COMMA typeSpecifier ID
 		| typeSpecifier ID
+		| error ID {print_error("Parameters list");}
 		;
+
 
 main:
 		NUM MAIN OP_PARENS mainParameters CL_PARENS OP_CURLY statementList CL_CURLY
+		| error OP_CURLY statementList CL_CURLY {print_error("Main declaration: Before '{'");}
 		;
 
 mainParameters:
@@ -96,6 +98,7 @@ statement:
 		| structDeclaration
 		| conditionalStatement
 		| expressionStatement
+		| error SEMICOLON {print_error("statement error");}
 		;
 
 variableDeclaration:

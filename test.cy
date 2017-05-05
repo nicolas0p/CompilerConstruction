@@ -4,6 +4,13 @@ num teste(char a, boolean c) {
 	return i + 3.42;
 }
 
+struct arvore {
+	num a;
+	arvore b;
+};
+
+arvore lala() {;}
+
 num[] func()
 {
 	num abcd;

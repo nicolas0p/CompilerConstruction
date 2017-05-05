@@ -5,7 +5,20 @@ using namespace std;
 
 #include "parser.tab.h" //token types
 
+void yyerror(const char *str)
+{
+	cout << "<Line " << yylineno << "> "<< "Error: "<< str << endl;
+	//exit(-1);
+}
+
+void print_error(const char *str)
+{
+	//print the actual line of the file too
+	cout << "<Line " << yylineno << "> "<< str << endl;
+}
+
 %}
+%option yylineno
 %%
 [ \t\n]			;
 "true"			{return TRUE;}
