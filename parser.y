@@ -71,7 +71,6 @@ parameters:
 paramList:
 		paramList COMMA typeSpecifier ID
 		| typeSpecifier ID
-		| error ID {print_error("Parameters list");}
 		;
 
 
@@ -157,6 +156,7 @@ returnStatement1:
 
 structDeclaration:
 		STRUCT ID OP_CURLY variableDeclarationNoValueList CL_CURLY SEMICOLON
+		| STRUCT error SEMICOLON {print_error("Struct declaration: Before ';'");}
 		;
 
 variableDeclarationNoValueList:

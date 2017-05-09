@@ -2,7 +2,6 @@
 #include <iostream>
 #include <fstream>
 #include <string>
-#include <boost/algorithm/string.hpp>
 using namespace std;
 #define YY_DECL extern "C" int yylex()
 
@@ -16,13 +15,17 @@ void yyerror(const char *str)
 	//exit(-1);
 }
 
+string trim(string to_trim) {
+	size_t first = to_trim.find_first_not_of(' \t');
+	return to_trim.substr(first, to_trim.length());
+}
+
 string get_line(ifstream& file, int line_number) {
-	int i = 0;
+	int i = 1;
 	string line;
 	while(getline(file, line)) {
 		if(i == line_number){
-			boost::trim(line);
-			return line;
+			return trim(line);
 		}
 		++i;
 	}
