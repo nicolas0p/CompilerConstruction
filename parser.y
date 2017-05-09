@@ -2,6 +2,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <iostream>
+#include <fstream>
 using namespace std;
 
 extern "C" int yylex();
@@ -10,6 +11,8 @@ extern "C" FILE *yyin;
 
 extern void yyerror(const char* s);
 extern void print_error(const char* s);
+
+ifstream open_file;
 
 int yywrap()
 {
@@ -360,6 +363,7 @@ yydebug = 1;
 		cout << "I can't open the file!" << endl;
 		return -1;
 	}
+	open_file.open(argv[1], ios::in);
 	// set flex to read from it instead of defaulting to STDIN:
 	yyin = myfile;
 	// parse through the input until there is no more:

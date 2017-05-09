@@ -1,9 +1,14 @@
 %{
 #include <iostream>
+#include <fstream>
+#include <string>
+#include <boost/algorithm/string.hpp>
 using namespace std;
 #define YY_DECL extern "C" int yylex()
 
 #include "parser.tab.h" //token types
+
+extern ifstream open_file;
 
 void yyerror(const char *str)
 {
@@ -11,10 +16,24 @@ void yyerror(const char *str)
 	//exit(-1);
 }
 
+string get_line(ifstream& file, int line_number) {
+	int i = 0;
+	string line;
+	while(getline(file, line)) {
+		if(i == line_number){
+			boost::trim(line);
+			return line;
+		}
+		++i;
+	}
+}
+
 void print_error(const char *str)
 {
 	//print the actual line of the file too
-	cout << "<Line " << yylineno << "> "<< str << endl;
+	open_file.seekg(0, ios::beg); //resets location to beginning of the file
+	string line = get_line(open_file, yylineno);
+	cout << "<Line " << yylineno << "> " << line << " : " << str << endl;
 }
 
 %}
