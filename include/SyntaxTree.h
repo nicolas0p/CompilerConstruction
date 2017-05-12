@@ -1,9 +1,20 @@
+#ifndef SYNTAX_TREE_H
+#define SYNTAX_TREE_H
+
+#include <list>
+
 #include "TreeNode.h"
 
 class SyntaxTree
 {
-	SyntaxTree();
-	~SyntaxTree();
+	public:
+		SyntaxTree();
+		virtual ~SyntaxTree();
 
-	void insertNode(TreeNode* node);
+		void insertNode(TreeNode* node);
+
+	private:
+		std::list<TreeNode*> _nodes; //Will contain function definitions, struct definitions and the main only
 };
+
+#endif /* SYNTAX_TREE_H */

@@ -16,7 +16,7 @@ void yyerror(const char *str)
 }
 
 string trim(string to_trim) {
-	size_t first = to_trim.find_first_not_of(' \t');
+	size_t first = to_trim.find_first_not_of(' ');
 	return to_trim.substr(first, to_trim.length());
 }
 

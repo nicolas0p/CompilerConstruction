@@ -1,3 +1,6 @@
+#ifndef TREENODE_H
+#define TREENODE_H
+
 #include <list>
 #include <string>
 
@@ -82,3 +85,5 @@ class ReservedWordNode : public TreeNode {
 	private:
 		reservedWord _word;
 };
+
+#endif /* TREENODE_H */
