@@ -7,7 +7,7 @@
 class TreeNode
 {
 	TreeNode();
-	virtual ~TreeNode();
+	virtual ~TreeNode() = 0;
 };
 
 class VariableNode : public TreeNode {

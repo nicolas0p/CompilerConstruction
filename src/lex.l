@@ -29,6 +29,7 @@ string get_line(ifstream& file, int line_number) {
 		}
 		++i;
 	}
+	return string("");
 }
 
 void print_error(const char *str)
