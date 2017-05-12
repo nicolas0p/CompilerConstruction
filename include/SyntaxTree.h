@@ -11,7 +11,7 @@ class SyntaxTree
 		SyntaxTree();
 		virtual ~SyntaxTree();
 
-		void insertNode(TreeNode* node);
+		void insert_node(TreeNode* node);
 
 	private:
 		std::list<TreeNode*> _nodes; //Will contain function definitions, struct definitions and the main only

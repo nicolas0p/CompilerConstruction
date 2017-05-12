@@ -3,6 +3,9 @@
 #include <string.h>
 #include <iostream>
 #include <fstream>
+#include <list>
+
+
 using namespace std;
 
 extern "C" int yylex();
@@ -19,25 +22,37 @@ int yywrap()
     return 1;
 }
 
+
 %}
+%code requires {
+#include "SyntaxTree.h"
+#include "TreeNode.h"
+SyntaxTree syntax_tree;
+}
+
 %define parse.error verbose
 
 %union {
 	int ival;
 	float fval;
-	char *sval;
+	char * charp;
 	bool bval;
+	TreeNode* node;
+	std::list<std::string>* string_list;
+	std::list<VariableNode>* variable_list;
 }
 
 %token <ival> INTLITERAL
 %token <fval> FLOATLITERAL
-%token <sval> STRINGLITERAL
-%token <sval> ID
-%token <sval> CHARLITERAL
-%token NUM BOOLEAN CHAR
-%token TRUE FALSE FOR IF ELSE WHILE RETURN BREAK STRUCT VOID MAIN
+%token <charp> STRINGLITERAL
+%token <charp> ID
+%token <charp> CHARLITERAL
+%token <charp> NUM BOOLEAN CHAR
+%token <bool> TRUE FALSE
+%token <charp> FOR IF ELSE WHILE RETURN BREAK STRUCT VOID MAIN
 %token SEMICOLON COMMA PERIOD
-%token OP_PARENS CL_PARENS OP_SQUARE CL_SQUARE OP_CURLY CL_CURLY
+%token OP_PARENS CL_PARENS OP_CURLY CL_CURLY
+%token <charp> OP_SQUARE CL_SQUARE
 %token EQUAL NOT_EQUAL NOT GREATER LESS AND OR GREATER_EQ LESS_EQ
 %token ATTRIBUTION
 %token PLUS MINUS TIMES DIVIDE MOD
@@ -45,44 +60,54 @@ int yywrap()
 %left PLUS MINUS OR
 %left TIMES DIVIDE MOD AND
 
+%type <node> functionDeclaration
+%type <node> main
+%type <node> structDeclaration
+%type <variable_list> parameters
+%type <variable_list> paramList
+%type <variable_list> mainParameters
+%type <charp> returnType
+%type <charp> typeSpecifier
+%type <charp> arrayDef
+%type <charp> arrayDef1
+
 %%
 program:
-		declarations main
+		declarations main {syntax_tree.insert_node($2);}
 		;
 
 declarations:
-		declarations functionDeclaration
-		| declarations structDeclaration
+		declarations functionDeclaration {syntax_tree.insert_node($2);}
+		| declarations structDeclaration {syntax_tree.insert_node($2);}
 		/* empty */
 		|
 		;
 
 functionDeclaration:
-		returnType ID OP_PARENS parameters CL_PARENS OP_CURLY statementList CL_CURLY
+		returnType ID OP_PARENS parameters CL_PARENS OP_CURLY statementList CL_CURLY {$$ = new FunctionDeclarationNode($2, $1, $4);}
 		| error OP_CURLY statementList CL_CURLY {print_error("Function declaration: Before '{'");}
 		;
 
 parameters:
-		paramList
+		paramList {$$ = $1}
 		/* empty */
-		|
+		| {$$ = new std::list<std::string>();}
 		;
 
 paramList:
-		paramList COMMA typeSpecifier ID
-		| typeSpecifier ID
+		paramList COMMA typeSpecifier ID {$1->push_back(new VariableNode($3, $4)); $$ = $1;}
+		| typeSpecifier ID {auto list = &std::list<VariableNode*>(); list->push_back(new VariableNode($1, $2)); $$ = list;}
 		;
 
-
 main:
-		NUM MAIN OP_PARENS mainParameters CL_PARENS OP_CURLY statementList CL_CURLY
+		NUM MAIN OP_PARENS mainParameters CL_PARENS OP_CURLY statementList CL_CURLY {$$ = new FunctionDeclarationNode($2, $1, $4);}
 		| error OP_CURLY statementList CL_CURLY {print_error("Main declaration: Before '{'");}
 		;
 
 mainParameters:
-		NUM ID COMMA CHAR OP_SQUARE CL_SQUARE ID
+		NUM ID COMMA CHAR OP_SQUARE CL_SQUARE ID {$$ = new std::list<VariableNode>({new VariableNode($1, $2), new VariableNode("char[]", $7)});}
 		/* empty */
-		|
+		| {$$ = new std::list<VariableNode>();}
 		;
 
 statementList:
@@ -155,7 +180,7 @@ returnStatement1:
 		;
 
 structDeclaration:
-		STRUCT ID OP_CURLY variableDeclarationNoValueList CL_CURLY SEMICOLON
+		STRUCT ID OP_CURLY variableDeclarationNoValueList CL_CURLY SEMICOLON {$$ = new StructNode($2);}
 		| STRUCT error SEMICOLON {print_error("Struct declaration: Before ';'");}
 		;
 
@@ -190,20 +215,20 @@ returnType:
 		;
 
 typeSpecifier:
-		NUM arrayDef
-		| BOOLEAN arrayDef
-		| CHAR arrayDef
-		| ID
+		NUM arrayDef {$$ = std::string($1) + std::string($2);}
+		| BOOLEAN arrayDef {$$ = std::string($1) + std::string($2);}
+		| CHAR arrayDef {$$ = std::string($1) + std::string($2);}
+		| ID {$$ = $1;}
 		;
 
 arrayDef:
-		OP_SQUARE arrayDef1
-		|
+		OP_SQUARE arrayDef1 {$$ = std::string($1) + std::string($2);}
+		| {$$ = ' ';}
 		;
 
 arrayDef1:
-		CL_SQUARE
-		| INTLITERAL CL_SQUARE
+		CL_SQUARE {$$ = ']';}
+		| INTLITERAL CL_SQUARE {$$ = std::string($1) + std::string("]");}
 		;
 
 mutableOrFunctionCall:

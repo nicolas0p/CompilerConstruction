@@ -43,51 +43,51 @@ void print_error(const char *str)
 %}
 %option yylineno
 %%
-[ \t\n]			;
-"true"			{return TRUE;}
-"false"			{return FALSE;}
-"for"			{return FOR;}
-"if"			{return IF;}
-"else"			{return ELSE;}
-"while"			{return WHILE;}
-"return"		{return RETURN;}
-"break"			{return BREAK;}
-"struct"		{return STRUCT;}
-"void"			{return VOID;}
-"main"			{return MAIN;}
-"num"			{return NUM;}
-"boolean"		{return BOOLEAN;}
-"char"			{return CHAR;}
+[ \t\n]				;
+"true"				{return TRUE;}
+"false"				{return FALSE;}
+"for"				{return FOR;}
+"if"				{return IF;}
+"else"				{return ELSE;}
+"while"				{return WHILE;}
+"return"			{return RETURN;}
+"break"				{return BREAK;}
+"struct"			{return STRUCT;}
+"void"				{return VOID;}
+"main"				{return MAIN;}
+"num"				{return NUM;}
+"boolean"			{return BOOLEAN;}
+"char"				{return CHAR;}
 
 [0-9]+\.[0-9]+  	{yylval.fval = atof(yytext); return FLOATLITERAL;}
 [0-9]+          	{yylval.ival = atoi(yytext); return INTLITERAL;}
-\"(\\.|[^\\"])*\" 	{yylval.sval = strdup(yytext); return STRINGLITERAL;}
-'(\\.|[^\\'])'		{yylval.sval = strdup(yytext); return CHARLITERAL;}
-[a-zA-Z]+		{yylval.sval = strdup(yytext); return ID;}
+\"(\\.|[^\\"])*\" 	{yylval.charp = strdup(yytext); return STRINGLITERAL;}
+'(\\.|[^\\'])'		{yylval.charp = strdup(yytext); return CHARLITERAL;}
+[a-zA-Z]+			{yylval.charp = strdup(yytext); return ID;}
 
-">="			{return GREATER_EQ;}
-"<="			{return LESS_EQ;}
-"=="			{return EQUAL;}
-"!="			{return NOT_EQUAL;}
-";"			{return SEMICOLON;}
-","			{return COMMA;}
-"."			{return PERIOD;}
-"("			{return OP_PARENS;}
-")"			{return CL_PARENS;}
-"["			{return OP_SQUARE;}
-"]"			{return CL_SQUARE;}
-"{"			{return OP_CURLY;}
-"}"			{return CL_CURLY;}
-"="			{return ATTRIBUTION;}
-"!"			{return NOT;}
-">"			{return GREATER;}
-"<"			{return LESS;}
-"&&"			{return AND;}
-"||"			{return OR;}
-"+"			{return PLUS;}
-"-"			{return MINUS;}
-"*"			{return TIMES;}
-"/"			{return DIVIDE;}
-"%"			{return MOD;}
+">="				{return GREATER_EQ;}
+"<="				{return LESS_EQ;}
+"=="				{return EQUAL;}
+"!="				{return NOT_EQUAL;}
+";"					{return SEMICOLON;}
+","					{return COMMA;}
+"."					{return PERIOD;}
+"("					{return OP_PARENS;}
+")"					{return CL_PARENS;}
+"["					{return OP_SQUARE;}
+"]"					{return CL_SQUARE;}
+"{"					{return OP_CURLY;}
+"}"					{return CL_CURLY;}
+"="					{return ATTRIBUTION;}
+"!"					{return NOT;}
+">"					{return GREATER;}
+"<"					{return LESS;}
+"&&"				{return AND;}
+"||"				{return OR;}
+"+"					{return PLUS;}
+"-"					{return MINUS;}
+"*"					{return TIMES;}
+"/"					{return DIVIDE;}
+"%"					{return MOD;}
 
 %%

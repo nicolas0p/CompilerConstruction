@@ -6,22 +6,29 @@
 
 class TreeNode
 {
-	TreeNode();
-	virtual ~TreeNode() = 0;
+	public:
+		TreeNode();
+		virtual ~TreeNode(){};
+enum Operator {
+	PLUS, MINUS, MULTIPLICATION, DIVISION, MOD, AND, OR, ATTRIBUTION, EQUAL, NOT_EQUAL, GREATER, LESS, GREATER_EQ, LESS_EQ};
+
+enum reservedWord {
+	RETURN, FOR, WHILE, IF, ELSE, BREAK};
 };
 
 class VariableNode : public TreeNode {
 	public:
-		VariableNode(std::string name);
+		VariableNode(const std::string& type, const std::string& name);
 		~VariableNode();
 
 	private:
 		std::string _name;
+		std::string _type;
 };
 
 class TypeNode : public TreeNode {
 	public:
-		TypeNode(std::string type);
+		TypeNode(const std::string& type);
 		~TypeNode();
 	private:
 		std::string _type;
@@ -29,20 +36,16 @@ class TypeNode : public TreeNode {
 
 class LiteralNode : public TreeNode {
 	public:
-		LiteralNode(std::string type, std::string value);
+		LiteralNode(const std::string& type, const std::string& value);
 		~LiteralNode();
 	private:
 		std::string _type;
 		std::string _value;
 };
 
-enum Operator {
-	PLUS, MINUS, MULTIPLICATION, DIVISION, MOD, AND, OR, ATTRIBUTION, EQUAL, NOT_EQUAL, GREATER, LESS, GREATER_EQ, LESS_EQ
-};
-
 class OperatorNode : public TreeNode {
 	public:
-		OperatorNode(Operator op);
+		OperatorNode(const Operator& op);
 		~OperatorNode();
 	private:
 		Operator _operator;
@@ -50,7 +53,7 @@ class OperatorNode : public TreeNode {
 
 class FunctionDeclarationNode : public TreeNode {
 	public:
-		FunctionDeclarationNode(std::string name, std::string return_type, std::list<std::string> parameters);
+		FunctionDeclarationNode(const std::string& name, const std::string& return_type, const std::list<std::string>& parameters);
 		~FunctionDeclarationNode();
 	private:
 		std::string _name;
@@ -60,7 +63,7 @@ class FunctionDeclarationNode : public TreeNode {
 
 class FunctionCallNode : public TreeNode {
 	public:
-		FunctionCallNode(std::string name);
+		FunctionCallNode(const std::string& name);
 		~FunctionCallNode();
 	private:
 		std::string _name;
@@ -68,19 +71,15 @@ class FunctionCallNode : public TreeNode {
 
 class StructNode : public TreeNode {
 	public:
-		StructNode(std::string name);
+		StructNode(const std::string& name);
 		~StructNode();
 	private:
 		std::string _name;
 };
 
-enum reservedWord {
-	RETURN, FOR, WHILE, IF, ELSE, BREAK
-};
-
 class ReservedWordNode : public TreeNode {
 	public:
-		ReservedWordNode(reservedWord word);
+		ReservedWordNode(const reservedWord& word);
 		~ReservedWordNode();
 	private:
 		reservedWord _word;
