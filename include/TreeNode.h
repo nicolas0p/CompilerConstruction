@@ -18,7 +18,7 @@ enum reservedWord {
 
 class VariableNode : public TreeNode {
 	public:
-		VariableNode(const std::string& type, const std::string& name);
+		VariableNode(const char* type, const char* name);
 		~VariableNode();
 
 	private:
@@ -28,7 +28,7 @@ class VariableNode : public TreeNode {
 
 class TypeNode : public TreeNode {
 	public:
-		TypeNode(const std::string& type);
+		TypeNode(const char* type);
 		~TypeNode();
 	private:
 		std::string _type;
@@ -36,7 +36,7 @@ class TypeNode : public TreeNode {
 
 class LiteralNode : public TreeNode {
 	public:
-		LiteralNode(const std::string& type, const std::string& value);
+		LiteralNode(const char* type, const char* value);
 		~LiteralNode();
 	private:
 		std::string _type;
@@ -53,7 +53,7 @@ class OperatorNode : public TreeNode {
 
 class FunctionDeclarationNode : public TreeNode {
 	public:
-		FunctionDeclarationNode(const std::string& name, const std::string& return_type, const std::list<std::string>& parameters);
+		FunctionDeclarationNode(const char* name, const char* return_type, const std::list<VariableNode*>& parameters);
 		~FunctionDeclarationNode();
 	private:
 		std::string _name;
@@ -63,7 +63,7 @@ class FunctionDeclarationNode : public TreeNode {
 
 class FunctionCallNode : public TreeNode {
 	public:
-		FunctionCallNode(const std::string& name);
+		FunctionCallNode(const char* name);
 		~FunctionCallNode();
 	private:
 		std::string _name;
@@ -71,7 +71,7 @@ class FunctionCallNode : public TreeNode {
 
 class StructNode : public TreeNode {
 	public:
-		StructNode(const std::string& name);
+		StructNode(const char* name);
 		~StructNode();
 	private:
 		std::string _name;

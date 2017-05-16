@@ -35,11 +35,11 @@ SyntaxTree syntax_tree;
 %union {
 	int ival;
 	float fval;
-	char * charp;
+	const char * charp;
 	bool bval;
 	TreeNode* node;
 	std::list<std::string>* string_list;
-	std::list<VariableNode>* variable_list;
+	std::list<VariableNode*>* variable_list;
 }
 
 %token <ival> INTLITERAL
@@ -84,30 +84,30 @@ declarations:
 		;
 
 functionDeclaration:
-		returnType ID OP_PARENS parameters CL_PARENS OP_CURLY statementList CL_CURLY {$$ = new FunctionDeclarationNode($2, $1, $4);}
+		returnType ID OP_PARENS parameters CL_PARENS OP_CURLY statementList CL_CURLY {$$ = new FunctionDeclarationNode($2, $1, *$4);}
 		| error OP_CURLY statementList CL_CURLY {print_error("Function declaration: Before '{'");}
 		;
 
 parameters:
-		paramList {$$ = $1}
+		paramList {$$ = $1;}
 		/* empty */
-		| {$$ = new std::list<std::string>();}
+		| {$$ = new std::list<VariableNode*>();}
 		;
 
 paramList:
 		paramList COMMA typeSpecifier ID {$1->push_back(new VariableNode($3, $4)); $$ = $1;}
-		| typeSpecifier ID {auto list = &std::list<VariableNode*>(); list->push_back(new VariableNode($1, $2)); $$ = list;}
+		| typeSpecifier ID {auto list = new std::list<VariableNode*>(); list->push_back(new VariableNode($1, $2)); $$ = list;}
 		;
 
 main:
-		NUM MAIN OP_PARENS mainParameters CL_PARENS OP_CURLY statementList CL_CURLY {$$ = new FunctionDeclarationNode($2, $1, $4);}
+		NUM MAIN OP_PARENS mainParameters CL_PARENS OP_CURLY statementList CL_CURLY {$$ = new FunctionDeclarationNode($2, $1, *$4);}
 		| error OP_CURLY statementList CL_CURLY {print_error("Main declaration: Before '{'");}
 		;
 
 mainParameters:
-		NUM ID COMMA CHAR OP_SQUARE CL_SQUARE ID {$$ = new std::list<VariableNode>({new VariableNode($1, $2), new VariableNode("char[]", $7)});}
+		NUM ID COMMA CHAR OP_SQUARE CL_SQUARE ID {$$ = new std::list<VariableNode*>({new VariableNode($1, $2), new VariableNode("char[]", $7)});}
 		/* empty */
-		| {$$ = new std::list<VariableNode>();}
+		| {$$ = new std::list<VariableNode*>();}
 		;
 
 statementList:
@@ -215,20 +215,20 @@ returnType:
 		;
 
 typeSpecifier:
-		NUM arrayDef {$$ = std::string($1) + std::string($2);}
-		| BOOLEAN arrayDef {$$ = std::string($1) + std::string($2);}
-		| CHAR arrayDef {$$ = std::string($1) + std::string($2);}
+		NUM arrayDef {$$ = (std::string($1) + std::string($2)).c_str();}
+		| BOOLEAN arrayDef {$$ = (std::string($1) + std::string($2)).c_str();}
+		| CHAR arrayDef {$$ = (std::string($1) + std::string($2)).c_str();}
 		| ID {$$ = $1;}
 		;
 
 arrayDef:
-		OP_SQUARE arrayDef1 {$$ = std::string($1) + std::string($2);}
-		| {$$ = ' ';}
+		OP_SQUARE arrayDef1 {$$ = (std::string($1) + std::string($2)).c_str();}
+		| {$$ = (const char*) new char(' ');}
 		;
 
 arrayDef1:
-		CL_SQUARE {$$ = ']';}
-		| INTLITERAL CL_SQUARE {$$ = std::string($1) + std::string("]");}
+		CL_SQUARE {$$ = (const char*) new char(']');}
+		| INTLITERAL CL_SQUARE {$$ = (std::string($1) + std::string("]")).c_str();}
 		;
 
 mutableOrFunctionCall:
