@@ -1,10 +1,10 @@
 %{
 #include <stdio.h>
-#include <string.h>
+#include <string>
 #include <iostream>
 #include <fstream>
+#include <sstream>
 #include <list>
-
 
 using namespace std;
 
@@ -22,11 +22,17 @@ int yywrap()
     return 1;
 }
 
-
 %}
+//this goes in the .h
 %code requires {
 #include "SyntaxTree.h"
 #include "TreeNode.h"
+extern SyntaxTree syntax_tree;
+}
+
+//this goes in the .cpp
+%code top {
+#include "SyntaxTree.h"
 SyntaxTree syntax_tree;
 }
 
@@ -228,7 +234,7 @@ arrayDef:
 
 arrayDef1:
 		CL_SQUARE {$$ = (const char*) new char(']');}
-		| INTLITERAL CL_SQUARE {$$ = (std::string($1) + std::string("]")).c_str();}
+		| INTLITERAL CL_SQUARE {std::ostringstream convert; convert << $1; $$ = (convert.str() + std::string("]")).c_str();}
 		;
 
 mutableOrFunctionCall:

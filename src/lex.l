@@ -44,20 +44,20 @@ void print_error(const char *str)
 %option yylineno
 %%
 [ \t\n]				;
-"true"				{return TRUE;}
-"false"				{return FALSE;}
-"for"				{return FOR;}
-"if"				{return IF;}
-"else"				{return ELSE;}
-"while"				{return WHILE;}
-"return"			{return RETURN;}
-"break"				{return BREAK;}
-"struct"			{return STRUCT;}
-"void"				{return VOID;}
-"main"				{return MAIN;}
-"num"				{return NUM;}
-"boolean"			{return BOOLEAN;}
-"char"				{return CHAR;}
+"true"				{yylval.bval = true; return TRUE;}
+"false"				{yylval.bval = false; return FALSE;}
+"for"				{yylval.charp = strdup(yytext);return FOR;}
+"if"				{yylval.charp = strdup(yytext);return IF;}
+"else"				{yylval.charp = strdup(yytext);return ELSE;}
+"while"				{yylval.charp = strdup(yytext);return WHILE;}
+"return"			{yylval.charp = strdup(yytext);return RETURN;}
+"break"				{yylval.charp = strdup(yytext);return BREAK;}
+"struct"			{yylval.charp = strdup(yytext);return STRUCT;}
+"void"				{yylval.charp = strdup(yytext);return VOID;}
+"main"				{yylval.charp = strdup(yytext);return MAIN;}
+"num"				{yylval.charp = strdup(yytext); return NUM;}
+"boolean"			{yylval.charp = strdup(yytext); return BOOLEAN;}
+"char"				{yylval.charp = strdup(yytext); return CHAR;}
 
 [0-9]+\.[0-9]+  	{yylval.fval = atof(yytext); return FLOATLITERAL;}
 [0-9]+          	{yylval.ival = atoi(yytext); return INTLITERAL;}
@@ -74,8 +74,8 @@ void print_error(const char *str)
 "."					{return PERIOD;}
 "("					{return OP_PARENS;}
 ")"					{return CL_PARENS;}
-"["					{return OP_SQUARE;}
-"]"					{return CL_SQUARE;}
+"["					{yylval.charp = strdup(yytext); return OP_SQUARE;}
+"]"					{yylval.charp = strdup(yytext); return CL_SQUARE;}
 "{"					{return OP_CURLY;}
 "}"					{return CL_CURLY;}
 "="					{return ATTRIBUTION;}
