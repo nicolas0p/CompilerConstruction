@@ -1,4 +1,4 @@
-#include "SyntaxTree.h"
+#include "../include/SyntaxTree.h"
 
 SyntaxTree::SyntaxTree() : _nodes{std::list<TreeNode*>()}{
 }
