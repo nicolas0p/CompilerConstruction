@@ -44,8 +44,11 @@ SyntaxTree syntax_tree;
 	const char * charp;
 	bool bval;
 	TreeNode* node;
+	OperatorNode* opNode;
+	ReservedWordNode* rwNode;
 	std::list<std::string>* string_list;
-	std::list<VariableNode*>* variable_list;
+	std::list<const VariableNode*>* variable_list;
+	std::list<const TreeNode*>* node_list;
 }
 
 %token <ival> INTLITERAL
@@ -69,6 +72,24 @@ SyntaxTree syntax_tree;
 %type <node> functionDeclaration
 %type <node> main
 %type <node> structDeclaration
+%type <node_list> args
+%type <node_list> argList
+%type <node_list> statementList
+%type <node> statement
+%type <rwNode> loopStatement
+%type <rwNode> breakStatement
+%type <rwNode> returnStatement
+%type <rwNode> expressionStatement
+%type <rwNode> conditionalStatement
+%type <rwNode> conditionalStatement1
+%type <rwNode> conditionalStatement2
+%type <node> variableAttrOrDecla
+%type <opNode> variableAttribution
+%type <opNode> variableAttribution1
+%type <node> variableDeclaration
+%type <opNode> variableDeclaration1
+%type <node> expression
+%type <opNode> booleanExpression
 %type <variable_list> parameters
 %type <variable_list> paramList
 %type <variable_list> mainParameters
@@ -76,6 +97,7 @@ SyntaxTree syntax_tree;
 %type <charp> typeSpecifier
 %type <charp> arrayDef
 %type <charp> arrayDef1
+
 
 %%
 program:
@@ -97,12 +119,12 @@ functionDeclaration:
 parameters:
 		paramList {$$ = $1;}
 		/* empty */
-		| {$$ = new std::list<VariableNode*>();}
+		| {$$ = new std::list<const VariableNode*>();}
 		;
 
 paramList:
 		paramList COMMA typeSpecifier ID {$1->push_back(new VariableNode($3, $4)); $$ = $1;}
-		| typeSpecifier ID {auto list = new std::list<VariableNode*>(); list->push_back(new VariableNode($1, $2)); $$ = list;}
+		| typeSpecifier ID {auto list = new std::list<const VariableNode*>(); list->push_back(new VariableNode($1, $2)); $$ = list;}
 		;
 
 main:
@@ -111,76 +133,84 @@ main:
 		;
 
 mainParameters:
-		NUM ID COMMA CHAR OP_SQUARE CL_SQUARE ID {$$ = new std::list<VariableNode*>({new VariableNode($1, $2), new VariableNode("char[]", $7)});}
+		NUM ID COMMA CHAR OP_SQUARE CL_SQUARE ID {$$ = new std::list<const VariableNode*>({new VariableNode($1, $2), new VariableNode("char[]", $7)});}
 		/* empty */
-		| {$$ = new std::list<VariableNode*>();}
+		| {$$ = new std::list<const VariableNode*>();}
 		;
 
 statementList:
-		statementList statement
+		statementList statement {$1->push_back($2); $$ = $1;}
 		/* empty */
-		|
+		| {auto list = new std::list<const TreeNode*>(); $$ = list;}
 		;
 
 statement:
-		variableDeclaration SEMICOLON
-		| variableAttribution SEMICOLON
-		| loopStatement
-		| breakStatement
-		| returnStatement
-		| structDeclaration
-		| conditionalStatement
-		| expressionStatement
+		variableDeclaration SEMICOLON {$$ = $1;}
+		| variableAttribution SEMICOLON {$$ = $1;}
+		| loopStatement {$$ = $1;}
+		| breakStatement {$$ = $1;}
+		| returnStatement {$$ = $1;}
+		| structDeclaration {$$ = $1;}
+		| conditionalStatement {$$ = $1;}
+		| expressionStatement {$$ = $1;}
 		| error SEMICOLON {print_error("statement error");}
 		;
 
 variableDeclaration:
-		typeSpecifier ID variableDeclaration1
+		typeSpecifier ID variableDeclaration1 {$$ = $3 ? $3->set_left_child(new VariableNode($1, $2)) : (TreeNode*)new VariableNode($1, $2);}
 		;
 
 /*created to remove ambiguity*/
 variableDeclaration1:
-		ATTRIBUTION expression
-		|
+		ATTRIBUTION expression {OperatorNode *op = new OperatorNode(TreeNode::Operator::ATTRIBUTION); $$ = op->set_right_child($2);}
+		| {$$ = false;}
 		;
 
 variableAttribution:
-		ID variableAttribution1
+		ID variableAttribution1 {$2->set_left_child(new IdNode($1)); $$ = $2;}
 		;
 
 variableAttribution1:
-		ATTRIBUTION expression
-		| arrayAccess ATTRIBUTION expression
+		ATTRIBUTION expression {OperatorNode *op = new OperatorNode(TreeNode::Operator::ATTRIBUTION); $$ = op->set_right_child($2);}
+		| arrayAccess ATTRIBUTION expression {/*TODO*/}
 
 variableAttrOrDecla:
-		variableDeclaration
-		| variableAttribution
+		variableDeclaration {$$ = $1;}
+		| variableAttribution {$$ = $1;}
 		;
 
 loopStatement:
-		FOR OP_PARENS variableAttrOrDecla SEMICOLON booleanExpression SEMICOLON variableAttribution CL_PARENS OP_CURLY statementList CL_CURLY
-		| WHILE OP_PARENS booleanExpression CL_PARENS OP_CURLY statementList CL_CURLY
+		FOR OP_PARENS variableAttrOrDecla SEMICOLON booleanExpression SEMICOLON variableAttribution CL_PARENS OP_CURLY statementList CL_CURLY {
+			ReservedWordNode *forNode = new ReservedWordNode(TreeNode::FOR);
+			forNode->insert_child($3)->insert_child($5)->insert_child($7)->insert_child($10);
+			$$ = forNode;
+		}
+		| WHILE OP_PARENS booleanExpression CL_PARENS OP_CURLY statementList CL_CURLY {
+			ReservedWordNode *whileNode = new ReservedWordNode(TreeNode::WHILE);
+			whileNode->insert_child($3)->insert_child($6);
+			$$ = whileNode;
+		}
 		;
 
 args:
-		argList
-		|
+		argList {$$ = $1;}
+		| {$$ = new std::list<const TreeNode*>();}
 		;
 
 argList:
-		argList COMMA expression
-		| expression
+		argList COMMA expression {$$ = $1;}
+		| expression {auto list = new std::list<const TreeNode*>(); list->push_back($1); $$ = list;}
 		;
 
 breakStatement:
-		BREAK SEMICOLON
+		BREAK SEMICOLON {$$ = new ReservedWordNode(TreeNode::BREAK);}
 		;
 
 returnStatement:
-		RETURN returnStatement1
+		RETURN returnExpression {/*TODO returnExpression*/$$ = new ReservedWordNode(TreeNode::BREAK);}
 		;
 
-returnStatement1:
+returnExpression:
 		SEMICOLON
 		| expression SEMICOLON
 		;
@@ -196,18 +226,32 @@ variableDeclarationNoValueList:
 		;
 
 conditionalStatement:
-		IF OP_PARENS booleanExpression CL_PARENS OP_CURLY statementList CL_CURLY conditionalStatement1
+		IF OP_PARENS booleanExpression CL_PARENS OP_CURLY statementList CL_CURLY conditionalStatement1 {
+			ReservedWordNode *ifNode = new ReservedWordNode(TreeNode::IF);
+			ifNode->insert_child($3)->insert_child($6);
+			if ($1) {
+				ifNode->insert_child($8);
+			}
+			$$ = ifNode; 
+		}
 		;
 
 conditionalStatement1:
-		ELSE conditionalStatement2
-		/* empty */
-		|
+		ELSE conditionalStatement2 {$$ = $2;}
+		| {$$ = false;}
 		;
 
 conditionalStatement2:
-		conditionalStatement
-		| OP_CURLY statementList CL_CURLY
+		conditionalStatement {
+			ReservedWordNode *elseNode = new ReservedWordNode(TreeNode::ELSE);
+			elseNode->insert_child($1);
+			$$ = elseNode; 
+		}
+		| OP_CURLY statementList CL_CURLY {
+			ReservedWordNode *elseNode = new ReservedWordNode(TreeNode::ELSE);
+			elseNode->insert_child($2);
+			$$ = elseNode; 
+		}
 		;
 
 expressionStatement:
@@ -234,7 +278,7 @@ arrayDef:
 
 arrayDef1:
 		CL_SQUARE {$$ = (const char*) new char(']');}
-		| INTLITERAL CL_SQUARE {std::ostringstream convert; convert << $1; $$ = (convert.str() + std::string("]")).c_str();}
+| INTLITERAL CL_SQUARE {std::ostringstream convert; convert << $1; $$ = (convert.str() + std::string("]")).c_str();}
 		;
 
 mutableOrFunctionCall:

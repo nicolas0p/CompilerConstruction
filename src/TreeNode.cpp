@@ -14,10 +14,10 @@ LiteralNode::~LiteralNode(){}
 OperatorNode::OperatorNode(const Operator& op){}
 OperatorNode::~OperatorNode(){}
 
-FunctionDeclarationNode::FunctionDeclarationNode(const char* name, const char* return_type, const std::list<VariableNode*>& parameters){}
+FunctionDeclarationNode::FunctionDeclarationNode(const char* name, const char* return_type, const std::list<const VariableNode*>& parameters){}
 FunctionDeclarationNode::~FunctionDeclarationNode(){}
 
-FunctionCallNode::FunctionCallNode(const char* name){}
+FunctionCallNode::FunctionCallNode(const char* name, const std::list<const VariableNode*>& parameters){}
 FunctionCallNode::~FunctionCallNode(){}
 
 StructNode::StructNode(const char* name){}
