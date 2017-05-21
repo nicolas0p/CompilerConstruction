@@ -11,7 +11,7 @@ class TreeNode
 		virtual ~TreeNode(){};
 		
 		enum Operator {
-			PLUS, MINUS, MULTIPLICATION, DIVISION, MOD, AND, OR, ATTRIBUTION, EQUAL, NOT_EQUAL, GREATER, LESS, GREATER_EQ, LESS_EQ
+			PLUS, MINUS, TIMES, DIVIDE, MOD, AND, OR, ATTRIBUTION, EQUAL, NOT_EQUAL, GREATER, LESS, GREATER_EQ, LESS_EQ
 		};
 
 		enum UnaryOperator {
@@ -111,10 +111,11 @@ class FunctionCallNode : public TreeNode {
 
 class StructNode : public TreeNode {
 	public:
-		StructNode(const char* name);
+		StructNode(const char* name, const std::list<const VariableNode*>& variables);
 		~StructNode();
 	private:
 		std::string _name;
+		std::list<const VariableNode*> _variables;
 };
 
 class ReservedWordNode : public TreeNode {

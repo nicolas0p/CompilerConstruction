@@ -30,7 +30,7 @@ FunctionDeclarationNode::~FunctionDeclarationNode(){}
 FunctionCallNode::FunctionCallNode(const char* name, const std::list<const VariableNode*>& parameters){}
 FunctionCallNode::~FunctionCallNode(){}
 
-StructNode::StructNode(const char* name){}
+StructNode::StructNode(const char* name, const std::list<const VariableNode*>& variables){}
 StructNode::~StructNode(){}
 
 IdNode::IdNode(const char* name){}

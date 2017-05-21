@@ -47,6 +47,7 @@ SyntaxTree syntax_tree;
 	OperatorNode* opNode;
 	UnaryOperatorNode* unOpNode;
 	ReservedWordNode* rwNode;
+	LiteralNode* litNode;
 	std::list<std::string>* string_list;
 	std::list<const VariableNode*>* variable_list;
 	std::list<const TreeNode*>* node_list;
@@ -73,6 +74,7 @@ SyntaxTree syntax_tree;
 %type <node> functionDeclaration
 %type <node> main
 %type <node> structDeclaration
+%type <variable_list> variableDeclarationNoValueList
 %type <node_list> args
 %type <node_list> argList
 %type <node_list> statementList
@@ -90,11 +92,21 @@ SyntaxTree syntax_tree;
 %type <node> variableDeclaration
 %type <opNode> variableDeclaration1
 %type <node> expression
+%type <node> returnExpression
 %type <node> booleanExpression
+%type <opNode> booleanExpression1
+%type <node> numExpression
+%type <node> unaryNumExpression
 %type <opNode> boolRelOp
+%type <node> boolRelOp1
 %type <opNode> numRelOp
 %type <opNode> expOp
 %type <opNode> boolOp
+%type <opNode> boolOp1
+%type <opNode> numOp
+%type <opNode> numOp1
+%type <opNode> relOp
+%type <opNode> relOpNum
 %type <unOpNode> unaryNumOp
 %type <variable_list> parameters
 %type <variable_list> paramList
@@ -103,7 +115,7 @@ SyntaxTree syntax_tree;
 %type <charp> typeSpecifier
 %type <charp> arrayDef
 %type <charp> arrayDef1
-%type <ival> numLiteral
+%type <litNode> numLiteral
 %type <node> mutableOrFunctionCall
 
 
@@ -125,14 +137,14 @@ functionDeclaration:
 		;
 
 parameters:
-		paramList {$$ = $1;}
+		paramList {$$ = $1;} // {$$ = $1;} is the default action
 		/* empty */
 		| {$$ = new std::list<const VariableNode*>();}
 		;
 
 paramList:
 		paramList COMMA typeSpecifier ID {$1->push_back(new VariableNode($3, $4)); $$ = $1;}
-		| typeSpecifier ID {auto list = new std::list<const VariableNode*>(); list->push_back(new VariableNode($1, $2)); $$ = list;}
+		| typeSpecifier ID {auto list = new std::list<const VariableNode*>({new VariableNode($1, $2)}); $$ = list;}
 		;
 
 main:
@@ -148,7 +160,7 @@ mainParameters:
 
 statementList:
 		statementList statement {
-			if ($1 != NULL) {
+			if ($2 != NULL) {
 				$1->push_back($2);
 			}
 			$$ = $1;
@@ -195,12 +207,12 @@ variableAttrOrDecla:
 
 loopStatement:
 		FOR OP_PARENS variableAttrOrDecla SEMICOLON booleanExpression SEMICOLON variableAttribution CL_PARENS OP_CURLY statementList CL_CURLY {
-			ReservedWordNode *forNode = new ReservedWordNode(TreeNode::FOR);
+			auto forNode = new ReservedWordNode(TreeNode::FOR);
 			forNode->insert_child($3)->insert_child($5)->insert_child($7)->insert_child($10);
 			$$ = forNode;
 		}
 		| WHILE OP_PARENS booleanExpression CL_PARENS OP_CURLY statementList CL_CURLY {
-			ReservedWordNode *whileNode = new ReservedWordNode(TreeNode::WHILE);
+			auto whileNode = new ReservedWordNode(TreeNode::WHILE);
 			whileNode->insert_child($3)->insert_child($6);
 			$$ = whileNode;
 		}
@@ -213,7 +225,7 @@ args:
 
 argList:
 		argList COMMA expression {$$ = $1;}
-		| expression {auto list = new std::list<const TreeNode*>(); list->push_back($1); $$ = list;}
+		| expression {auto list = new std::list<const TreeNode*>({$1}); $$ = list;}
 		;
 
 breakStatement:
@@ -221,32 +233,29 @@ breakStatement:
 		;
 
 returnStatement:
-		RETURN returnExpression {/*TODO returnExpression*/$$ = new ReservedWordNode(TreeNode::BREAK);}
+		RETURN returnExpression {auto ret = new ReservedWordNode(TreeNode::RETURN); $$ = $2 != NULL ? ret->insert_child($2) : ret;} //TODO
 		;
 
 returnExpression:
-		SEMICOLON
-		| expression SEMICOLON
+		SEMICOLON {$$ = NULL;}
+		| expression SEMICOLON {$$ = $1;}
 		;
 
 structDeclaration:
-		STRUCT ID OP_CURLY variableDeclarationNoValueList CL_CURLY SEMICOLON {$$ = new StructNode($2);}
+		STRUCT ID OP_CURLY variableDeclarationNoValueList CL_CURLY SEMICOLON {$$ = new StructNode($2, *$4);}
 		| STRUCT error SEMICOLON {print_error("Struct declaration: Before ';'");}
 		;
 
 variableDeclarationNoValueList:
-		variableDeclarationNoValueList typeSpecifier ID SEMICOLON
-		| typeSpecifier ID SEMICOLON
+		variableDeclarationNoValueList typeSpecifier ID SEMICOLON {$1->push_back(new VariableNode($2, $3));}
+		| typeSpecifier ID SEMICOLON {auto list = new std::list<const VariableNode*>({new VariableNode($1, $2)}); $$ = list;}
 		;
 
 conditionalStatement:
 		IF OP_PARENS booleanExpression CL_PARENS OP_CURLY statementList CL_CURLY conditionalStatement1 {
-			ReservedWordNode *ifNode = new ReservedWordNode(TreeNode::IF);
+			auto ifNode = new ReservedWordNode(TreeNode::IF);
 			ifNode->insert_child($3)->insert_child($6);
-			if ($1 != NULL) {
-				ifNode->insert_child($8);
-			}
-			$$ = ifNode; 
+			$$ = $1 != NULL ? ifNode->insert_child($8) : ifNode; 
 		}
 		;
 
@@ -274,8 +283,8 @@ expressionStatement:
 		;
 
 returnType:
-		typeSpecifier
-		| VOID
+		typeSpecifier {$$ = $1;}
+		| VOID {$$ = $1;}
 		;
 
 typeSpecifier:
@@ -286,13 +295,13 @@ typeSpecifier:
 		;
 
 arrayDef:
-		OP_SQUARE arrayDef1 {$$ = (std::string($1) + std::string($2)).c_str();}
+		OP_SQUARE arrayDef1 {$$ = (std::string("[") + std::string($2)).c_str();}
 		| {$$ = (const char*) new char(' ');}
 		;
 
 arrayDef1:
-		CL_SQUARE {$$ = (const char*) new char(']');}
-| INTLITERAL CL_SQUARE {std::ostringstream convert; convert << $1; $$ = (convert.str() + std::string("]")).c_str();}
+		CL_SQUARE {$$ = "]";}
+		| INTLITERAL CL_SQUARE {$$ = (std::to_string($1) + std::string("]")).c_str();}
 		;
 
 mutableOrFunctionCall:
@@ -323,112 +332,117 @@ expression:
 		| OP_PARENS expression CL_PARENS {$$ = $2;}
 		| TRUE boolRelOp {$$ = $2->set_left_child(new LiteralNode("BOOLEAN", true));}
 		| FALSE boolRelOp {$$ = $2->set_left_child(new LiteralNode("BOOLEAN", false));}
-		| mutableOrFunctionCall expOp {$$ = $2->set_left_child($1);}
-		| numLiteral numRelOp {$2->set_left_child(new LiteralNode("NUM", $1)); $$ = $2;} //TODO type of numLiteral defined as int
-		| unaryNumOp numLiteral numRelOp {$$ = $1->set_child($3->set_left_child(new LiteralNode("NUM", $2)));}
+		| mutableOrFunctionCall expOp {$$ = $2 != NULL ? $2->set_left_child($1) : $1;}
+		| numLiteral numRelOp {$$ = $2 != NULL ? $2->set_left_child($1) : (TreeNode*)$1;}
+		| unaryNumOp numLiteral numRelOp {$$ = $3 != NULL ? $3->set_left_child($1->set_child($2)) : (TreeNode*)$1->set_child($2);}
 		| STRINGLITERAL {$$ = new LiteralNode("CHAR", $1);} //TODO remove ""
 		| CHARLITERAL {$$ = new LiteralNode("CHAR", $1);} //TODO remove ''
 		;
 
 expOp:
-		numOp1 {$$ = new OperatorNode(TreeNode::PLUS);} //TODO {$$ = $1;}
-		| boolOp1 {$$ = new OperatorNode(TreeNode::PLUS);} //TODO {$$ = $1;}
-		| relOpNum numExpression boolOp {$$ = new OperatorNode(TreeNode::PLUS);} //TODO {auto relOpNum = new OperatorNode($1); relOpNum.set_right_child($3->set_left_child($2)); $$ = relOpNum;}
-		| relOp expression boolOp {$$ = new OperatorNode(TreeNode::PLUS);} //TODO
-		| {$$ = new OperatorNode(TreeNode::PLUS);} //TODO
+		numOp1 {$$ = $1;}
+		| boolOp1 {$$ = $1;}
+		| relOpNum numExpression boolOp {
+			$1->set_right_child($2);
+			$$ = $3 != NULL ? $3->set_left_child($1) : $1;
+		}
+		| relOp expression boolOp {
+			$1->set_right_child($2);
+			$$ = $3 != NULL ? $3->set_left_child($1) : $1;
+		}
+		| {$$ = NULL;}
 		;
 
 numRelOp:
-		numOp1 {$$ = new OperatorNode(TreeNode::PLUS);} //TODO
-		| relOp expression {$$ = new OperatorNode(TreeNode::PLUS);} //TODO
-		| relOpNum numExpression {$$ = new OperatorNode(TreeNode::PLUS);} //TODO
-		| {$$ = new OperatorNode(TreeNode::PLUS);} //TODO
+		numOp1 {$$ = $1;}
+		| relOpNum numExpression {$$ = $1->set_right_child($2);}
+		| relOp expression {$$ = $1->set_right_child($2);}
+		| {$$ = NULL;}
 		;
 
 booleanExpression:
 		NOT booleanExpression boolOp {auto unOp = new UnaryOperatorNode(TreeNode::NOT); $$ = $3->set_left_child(unOp->set_child($2));}
 		| mutableOrFunctionCall boolRelOp {$$ = $2->set_left_child($1);}
-		| numLiteral numOp booleanExpression1 {$$ = new OperatorNode(TreeNode::AND);} //TODO
+		| numLiteral numOp booleanExpression1 {$$ = $2 != NULL ? $3->set_left_child($2->set_left_child($1)) : $3->set_left_child($1);} 
 		| OP_PARENS booleanExpression CL_PARENS boolOp {$$ = $2;}
 		| TRUE boolOp {$$ = $2 != NULL ? $2->set_left_child(new LiteralNode("BOOLEAN", true)) : (TreeNode*)new LiteralNode("BOOLEAN", true);}
-		| FALSE boolOp {$$ = $2 != NULL ? $2->set_left_child(new LiteralNode("BOOLEAN", true)) : (TreeNode*)new LiteralNode("BOOLEAN", true);}
+		| FALSE boolOp {$$ = $2 != NULL ? $2->set_left_child(new LiteralNode("BOOLEAN", false)) : (TreeNode*)new LiteralNode("BOOLEAN", false);}
 		;
 
 booleanExpression1:
-		relOp expression
-		| relOpNum numExpression
+		relOp expression {$$ = $1->set_right_child($2);}
+		| relOpNum numExpression {$$ = $1->set_right_child($2);}
 		;
 
 boolOp:
-		AND booleanExpression {$$ = new OperatorNode(TreeNode::AND);} //TODO
-		| OR booleanExpression {$$ = new OperatorNode(TreeNode::OR);} //TODO
+		AND booleanExpression {auto opNode = new OperatorNode(TreeNode::AND); $$ = opNode->set_right_child($2);}
+		| OR booleanExpression {auto opNode = new OperatorNode(TreeNode::OR); $$ = opNode->set_right_child($2);}
 		| {$$ = NULL;}
 		;
 
 boolOp1:
-		AND booleanExpression
-		| OR booleanExpression
+		AND booleanExpression {auto opNode = new OperatorNode(TreeNode::AND); $$ = opNode->set_right_child($2);}
+		| OR booleanExpression {auto opNode = new OperatorNode(TreeNode::OR); $$ = opNode->set_right_child($2);}
 		;
 
 boolRelOp:
-		boolOp
-		| relOp boolRelOp1 {$$ = new OperatorNode(TreeNode::AND);} //TODO
-		| relOpNum numExpression boolOp {$$ = new OperatorNode(TreeNode::AND);} //TODO
+		boolOp {$$ = $1;}
+		| relOp boolRelOp1 {$$ = $1->set_right_child($2);}
+		| relOpNum numExpression boolOp {$1->set_right_child($2); $$ = $3 != NULL ? $3->set_left_child($1) : $1;}
 		;
 
 boolRelOp1:
-		numExpression boolOp
-		| TRUE boolOp
-		| FALSE boolOp
+		numExpression boolOp {$$ = $2 != NULL ? $2->set_left_child($1) : $1;}
+		| TRUE boolOp {$$ = $2 != NULL ? $2->set_left_child(new LiteralNode("BOOLEAN", true)) : (TreeNode*)new LiteralNode("BOOLEAN", true);}
+		| FALSE boolOp {$$ = $2 != NULL ? $2->set_left_child(new LiteralNode("BOOLEAN", false)) : (TreeNode*)new LiteralNode("BOOLEAN", false);}
 		;
 
 relOp:
-		EQUAL
-		| NOT_EQUAL
+		EQUAL {$$ = new OperatorNode(TreeNode::EQUAL);}
+		| NOT_EQUAL {$$ = new OperatorNode(TreeNode::NOT_EQUAL);}
 		;
 
 relOpNum:
-		GREATER
-		| GREATER_EQ
-		| LESS
-		| LESS_EQ
+		GREATER {$$ = new OperatorNode(TreeNode::GREATER);}
+		| GREATER_EQ {$$ = new OperatorNode(TreeNode::GREATER_EQ);}
+		| LESS {$$ = new OperatorNode(TreeNode::LESS);}
+		| LESS_EQ {$$ = new OperatorNode(TreeNode::LESS_EQ);}
 		;
 
 numExpression:
-		unaryNumOp unaryNumExpression numOp
-		| mutableOrFunctionCall numOp
-		| OP_PARENS numExpression CL_PARENS numOp
-		| numLiteral numOp
+		unaryNumOp unaryNumExpression numOp {$1->set_child($2); $$ = $3 != NULL ? (TreeNode*)$3->set_left_child($1) : $1;}
+		| mutableOrFunctionCall numOp {$$ = $2 != NULL ? $2->set_left_child($1) : $1;}
+		| OP_PARENS numExpression CL_PARENS numOp {$$ = $4 != NULL ? $4->set_left_child($2) : $2;}
+		| numLiteral numOp {$$ = $2 != NULL ? $2->set_left_child($1) : (TreeNode*)$1;}
 		;
 
 numOp:
-		PLUS numExpression
-		| MINUS numExpression
-		| TIMES numExpression
-		| DIVIDE numExpression
-		| MOD numExpression
-		|
+		PLUS numExpression {auto opNode = new OperatorNode(TreeNode::PLUS); $$ = opNode->set_right_child($2);}
+		| MINUS numExpression {auto opNode = new OperatorNode(TreeNode::MINUS); $$ = opNode->set_right_child($2);}
+		| TIMES numExpression {auto opNode = new OperatorNode(TreeNode::TIMES); $$ = opNode->set_right_child($2);}
+		| DIVIDE numExpression {auto opNode = new OperatorNode(TreeNode::DIVIDE); $$ = opNode->set_right_child($2);}
+		| MOD numExpression {auto opNode = new OperatorNode(TreeNode::MOD); $$ = opNode->set_right_child($2);}
+		| {$$ = NULL;}
 		;
 
 numOp1:
-		PLUS numExpression
-		| MINUS numExpression
-		| TIMES numExpression
-		| DIVIDE numExpression
-		| MOD numExpression
+		PLUS numExpression {auto opNode = new OperatorNode(TreeNode::PLUS); $$ = opNode->set_right_child($2);}
+		| MINUS numExpression {auto opNode = new OperatorNode(TreeNode::MINUS); $$ = opNode->set_right_child($2);}
+		| TIMES numExpression {auto opNode = new OperatorNode(TreeNode::TIMES); $$ = opNode->set_right_child($2);}
+		| DIVIDE numExpression {auto opNode = new OperatorNode(TreeNode::DIVIDE); $$ = opNode->set_right_child($2);}
+		| MOD numExpression {auto opNode = new OperatorNode(TreeNode::MOD); $$ = opNode->set_right_child($2);}
 		;
 
 
 unaryNumExpression:
-		unaryNumOp unaryNumExpression
-		| mutableOrFunctionCall
-		| OP_PARENS numExpression CL_PARENS
-		| numLiteral
+		| mutableOrFunctionCall {$$ = $1;}
+		| OP_PARENS numExpression CL_PARENS {$$ = $2;}
+		| numLiteral {$$ = $1;}
 		;
 
 numLiteral:
-		INTLITERAL
-		| FLOATLITERAL {$$ = 1;} //TODO
+		INTLITERAL {$$ = new LiteralNode("NUM", $1);}
+		| FLOATLITERAL {$$ = new LiteralNode("NUM", $1);}
 		;
 
 unaryNumOp:
