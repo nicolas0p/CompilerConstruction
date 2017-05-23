@@ -27,14 +27,27 @@ UnaryOperatorNode* UnaryOperatorNode::set_child(const TreeNode* node) { return t
 FunctionDeclarationNode::FunctionDeclarationNode(const char* name, const char* return_type, const std::list<const VariableNode*>& parameters){}
 FunctionDeclarationNode::~FunctionDeclarationNode(){}
 
-FunctionCallNode::FunctionCallNode(const char* name, const std::list<const VariableNode*>& parameters){}
+FunctionCallNode::FunctionCallNode(const IdNode* name, const std::list<const TreeNode*>& parameters){}
+FunctionCallNode::FunctionCallNode(const std::list<const TreeNode*>* parameters){}
 FunctionCallNode::~FunctionCallNode(){}
+FunctionCallNode* FunctionCallNode::set_child(const IdNode* name){ return this; }
 
 StructNode::StructNode(const char* name, const std::list<const VariableNode*>& variables){}
 StructNode::~StructNode(){}
 
+AccessNode::AccessNode(){}
+AccessNode::~AccessNode(){}
+AccessNode* AccessNode::set_child(const AccessNode* acsNode) { return this; }
+
+
 IdNode::IdNode(const char* name){}
 IdNode::~IdNode(){}
+IdNode* IdNode::set_child(const AccessNode* acsNode) { return this; }
+
+ArrayAccessNode::ArrayAccessNode(const IdNode* idArray, const TreeNode* idxExpression){}
+ArrayAccessNode::ArrayAccessNode(const TreeNode* idxExpression){}
+ArrayAccessNode::~ArrayAccessNode(){}
+ArrayAccessNode* ArrayAccessNode::set_child(const AccessNode* acsNode) { return this; }
 
 ReservedWordNode::ReservedWordNode(const ReservedWord& word){}
 ReservedWordNode::~ReservedWordNode(){}

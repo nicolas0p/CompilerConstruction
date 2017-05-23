@@ -40,14 +40,6 @@ class TypeNode : public TreeNode {
 		std::string _type;
 };
 
-class IdNode : public TreeNode {
-	public:
-		IdNode(const char* name);
-		~IdNode();
-	private:
-		std::string _name;
-};
-
 class LiteralNode : public TreeNode {
 	public:
 		LiteralNode(const char* type, const char* value);
@@ -100,15 +92,6 @@ class FunctionDeclarationNode : public TreeNode {
 		std::list<std::string> _parameters;
 };
 
-class FunctionCallNode : public TreeNode {
-	public:
-		FunctionCallNode(const char* name, const std::list<const VariableNode*>& parameters);
-		~FunctionCallNode();
-	private:
-		std::string _name;
-		std::list<std::string> _parameters;
-};
-
 class StructNode : public TreeNode {
 	public:
 		StructNode(const char* name, const std::list<const VariableNode*>& variables);
@@ -116,6 +99,48 @@ class StructNode : public TreeNode {
 	private:
 		std::string _name;
 		std::list<const VariableNode*> _variables;
+};
+
+class AccessNode : public TreeNode {
+	public:
+		AccessNode();
+		virtual ~AccessNode();
+
+		virtual AccessNode* set_child(const AccessNode* name);
+};
+
+class IdNode : public AccessNode {
+	public:
+		IdNode(const char* name);
+		~IdNode();
+
+		IdNode* set_child(const AccessNode* name);
+	private:
+		std::string _name;
+};
+
+class FunctionCallNode : public AccessNode {
+	public:
+		FunctionCallNode(const IdNode* name, const std::list<const TreeNode*>& parameters);
+		FunctionCallNode(const std::list<const TreeNode*>* parameters);
+		~FunctionCallNode();
+
+		FunctionCallNode* set_child(const IdNode* name);
+	private:
+		std::string _name;
+		std::list<std::string> _parameters;
+};
+
+class ArrayAccessNode : public AccessNode {
+	public:
+		ArrayAccessNode(const IdNode* idArray, const TreeNode* idxExpression);
+		ArrayAccessNode(const TreeNode* idxExpression);
+		~ArrayAccessNode();
+
+		ArrayAccessNode* set_child(const AccessNode* idArray);
+	private:
+		std::string _id_array;
+		TreeNode* _index_expression;
 };
 
 class ReservedWordNode : public TreeNode {

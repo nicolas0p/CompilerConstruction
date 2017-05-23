@@ -48,6 +48,7 @@ SyntaxTree syntax_tree;
 	UnaryOperatorNode* unOpNode;
 	ReservedWordNode* rwNode;
 	LiteralNode* litNode;
+	AccessNode* acsNode;
 	std::list<std::string>* string_list;
 	std::list<const VariableNode*>* variable_list;
 	std::list<const TreeNode*>* node_list;
@@ -117,6 +118,10 @@ SyntaxTree syntax_tree;
 %type <charp> arrayDef1
 %type <litNode> numLiteral
 %type <node> mutableOrFunctionCall
+%type <acsNode> mutableOrFunctionCall1
+%type <acsNode> access
+%type <acsNode> arrayAccess
+%type <acsNode> structAccess
 
 
 %%
@@ -187,7 +192,7 @@ variableDeclaration:
 
 /*created to remove ambiguity*/
 variableDeclaration1:
-		ATTRIBUTION expression {OperatorNode *op = new OperatorNode(TreeNode::Operator::ATTRIBUTION); $$ = op->set_right_child($2);}
+		ATTRIBUTION expression {auto op = new OperatorNode(TreeNode::Operator::ATTRIBUTION); $$ = op->set_right_child($2);}
 		| {$$ = NULL;}
 		;
 
@@ -196,8 +201,8 @@ variableAttribution:
 		;
 
 variableAttribution1:
-		ATTRIBUTION expression {OperatorNode *op = new OperatorNode(TreeNode::Operator::ATTRIBUTION); $$ = op->set_right_child($2);}
-		| arrayAccess ATTRIBUTION expression {/*TODO*/}
+		ATTRIBUTION expression {auto op = new OperatorNode(TreeNode::Operator::ATTRIBUTION); $$ = op->set_right_child($2);}
+		| arrayAccess ATTRIBUTION expression {auto op = new OperatorNode(TreeNode::Operator::ATTRIBUTION); $$ = op->set_left_child($1)->set_right_child($3);}
 		;
 
 variableAttrOrDecla:
@@ -233,7 +238,7 @@ breakStatement:
 		;
 
 returnStatement:
-		RETURN returnExpression {auto ret = new ReservedWordNode(TreeNode::RETURN); $$ = $2 != NULL ? ret->insert_child($2) : ret;} //TODO
+		RETURN returnExpression {auto ret = new ReservedWordNode(TreeNode::RETURN); $$ = $2 != NULL ? ret->insert_child($2) : ret;}
 		;
 
 returnExpression:
@@ -305,26 +310,26 @@ arrayDef1:
 		;
 
 mutableOrFunctionCall:
-		ID mutableOrFunctionCall1 {$$ = new TreeNode();} //TODO
+		ID mutableOrFunctionCall1 {$$ = $2 != NULL ? $2->set_child(new IdNode($1)) : (TreeNode*)$1;}
 		;
 
 mutableOrFunctionCall1:
-		OP_PARENS args CL_PARENS access
-		| access
+		OP_PARENS args CL_PARENS access {$$ = $4 != NULL ? $4->set_child(new FunctionCallNode($2)) : dynamic_cast<AccessNode*>(new FunctionCallNode($2));}
+		| access {$$ = $1;}
 		;
 
 access:
-		structAccess
-		| arrayAccess
+		structAccess {$$ = $1;}
+		| arrayAccess {$$ = $1;}
 		;
 
 arrayAccess:
-		OP_SQUARE numExpression CL_SQUARE structAccess
+		OP_SQUARE numExpression CL_SQUARE structAccess {$$ = $4 != NULL ? $4->set_child(new ArrayAccessNode($2)) : new ArrayAccessNode($2);}
 		;
 
 structAccess:
-		PERIOD ID access
-		|
+		PERIOD ID access {$$ = $3 != NULL ? $3->set_child(new IdNode($2)) : new IdNode($2);}
+		| {$$ = NULL;}
 		;
 
 expression:
@@ -362,7 +367,7 @@ numRelOp:
 
 booleanExpression:
 		NOT booleanExpression boolOp {auto unOp = new UnaryOperatorNode(TreeNode::NOT); $$ = $3->set_left_child(unOp->set_child($2));}
-		| mutableOrFunctionCall boolRelOp {$$ = $2->set_left_child($1);}
+		| mutableOrFunctionCall boolRelOp {$$ = $2 != NULL ? $2->set_left_child($1) : $1;}
 		| numLiteral numOp booleanExpression1 {$$ = $2 != NULL ? $3->set_left_child($2->set_left_child($1)) : $3->set_left_child($1);} 
 		| OP_PARENS booleanExpression CL_PARENS boolOp {$$ = $2;}
 		| TRUE boolOp {$$ = $2 != NULL ? $2->set_left_child(new LiteralNode("BOOLEAN", true)) : (TreeNode*)new LiteralNode("BOOLEAN", true);}
