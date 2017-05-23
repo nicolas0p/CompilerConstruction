@@ -99,6 +99,7 @@ SyntaxTree syntax_tree;
 %type <node> numExpression
 %type <node> unaryNumExpression
 %type <opNode> boolRelOp
+%type <opNode> boolRelOp2
 %type <node> boolRelOp1
 %type <opNode> numRelOp
 %type <opNode> expOp
@@ -335,8 +336,8 @@ structAccess:
 expression:
 		NOT booleanExpression {auto unOp = new UnaryOperatorNode(TreeNode::NOT); $$ = unOp->set_child($2);}
 		| OP_PARENS expression CL_PARENS {$$ = $2;}
-		| TRUE boolRelOp {$$ = $2->set_left_child(new LiteralNode("BOOLEAN", true));}
-		| FALSE boolRelOp {$$ = $2->set_left_child(new LiteralNode("BOOLEAN", false));}
+		| TRUE boolRelOp2 {$$ = $2->set_left_child(new LiteralNode("BOOLEAN", true));}
+		| FALSE boolRelOp2 {$$ = $2->set_left_child(new LiteralNode("BOOLEAN", false));}
 		| mutableOrFunctionCall expOp {$$ = $2 != NULL ? $2->set_left_child($1) : $1;}
 		| numLiteral numRelOp {$$ = $2 != NULL ? $2->set_left_child($1) : (TreeNode*)$1;}
 		| unaryNumOp numLiteral numRelOp {$$ = $3 != NULL ? $3->set_left_child($1->set_child($2)) : (TreeNode*)$1->set_child($2);}
@@ -402,6 +403,11 @@ boolRelOp1:
 		| FALSE boolOp {$$ = $2 != NULL ? $2->set_left_child(new LiteralNode("BOOLEAN", false)) : (TreeNode*)new LiteralNode("BOOLEAN", false);}
 		;
 
+boolRelOp2:
+		boolOp {$$ = $1;}
+		| relOp boolRelOp1 {$$ = $1->set_right_child($2);}
+		;
+
 relOp:
 		EQUAL {$$ = new OperatorNode(TreeNode::EQUAL);}
 		| NOT_EQUAL {$$ = new OperatorNode(TreeNode::NOT_EQUAL);}
@@ -440,7 +446,7 @@ numOp1:
 
 
 unaryNumExpression:
-		| mutableOrFunctionCall {$$ = $1;}
+		mutableOrFunctionCall {$$ = $1;}
 		| OP_PARENS numExpression CL_PARENS {$$ = $2;}
 		| numLiteral {$$ = $1;}
 		;
