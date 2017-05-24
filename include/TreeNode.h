@@ -65,8 +65,8 @@ class OperatorNode : public TreeNode {
 		OperatorNode* set_right_child(const TreeNode* node);
 	private:
 		Operator _operator;
-		TreeNode* _left;
-		TreeNode* _right;
+		const TreeNode* _left;
+		const TreeNode* _right;
 };
 
 class UnaryOperatorNode : public TreeNode {
@@ -76,8 +76,8 @@ class UnaryOperatorNode : public TreeNode {
 
 		UnaryOperatorNode* set_child(const TreeNode* node);
 	private:
-		Operator _operator;
-		TreeNode* _child;
+		UnaryOperator _operator;
+		const TreeNode* _child;
 };
 
 class FunctionDeclarationNode : public TreeNode {
@@ -85,11 +85,11 @@ class FunctionDeclarationNode : public TreeNode {
 		FunctionDeclarationNode(const char* name, const char* return_type, const std::list<const VariableNode*>& parameters);
 		~FunctionDeclarationNode();
 
-		FunctionDeclarationNode* set_children(std::list<const TreeNode*>& statements);
+		// FunctionDeclarationNode* set_children(std::list<const TreeNode*>& statements);
 	private:
 		std::string _name;
 		std::string _return_type;
-		std::list<std::string> _parameters;
+		std::list<const VariableNode*> _parameters;
 };
 
 class StructNode : public TreeNode {
@@ -106,29 +106,24 @@ class AccessNode : public TreeNode {
 		AccessNode();
 		virtual ~AccessNode();
 
-		virtual AccessNode* set_child(const AccessNode* name);
+		AccessNode* set_child(const AccessNode* name);
+		std::string _name;	
 };
 
 class IdNode : public AccessNode {
 	public:
 		IdNode(const char* name);
 		~IdNode();
-
-		IdNode* set_child(const AccessNode* name);
-	private:
-		std::string _name;
 };
 
 class FunctionCallNode : public AccessNode {
 	public:
-		FunctionCallNode(const IdNode* name, const std::list<const TreeNode*>& parameters);
+		FunctionCallNode(const IdNode* name, const std::list<const TreeNode*>* parameters);
 		FunctionCallNode(const std::list<const TreeNode*>* parameters);
 		~FunctionCallNode();
 
-		FunctionCallNode* set_child(const IdNode* name);
 	private:
-		std::string _name;
-		std::list<std::string> _parameters;
+		const std::list<const TreeNode*>* _parameters;
 };
 
 class ArrayAccessNode : public AccessNode {
@@ -137,10 +132,8 @@ class ArrayAccessNode : public AccessNode {
 		ArrayAccessNode(const TreeNode* idxExpression);
 		~ArrayAccessNode();
 
-		ArrayAccessNode* set_child(const AccessNode* idArray);
 	private:
-		std::string _id_array;
-		TreeNode* _index_expression;
+		const TreeNode* _index_expression;
 };
 
 class ReservedWordNode : public TreeNode {
