@@ -8,7 +8,7 @@ class TreeNode
 {
 	public:
 		TreeNode();
-		virtual ~TreeNode(){};
+		virtual ~TreeNode();
 		
 		enum Operator {
 			PLUS, MINUS, TIMES, DIVIDE, MOD, AND, OR, ATTRIBUTION, EQUAL, NOT_EQUAL, GREATER, LESS, GREATER_EQ, LESS_EQ

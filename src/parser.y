@@ -261,7 +261,7 @@ conditionalStatement:
 		IF OP_PARENS booleanExpression CL_PARENS OP_CURLY statementList CL_CURLY conditionalStatement1 {
 			auto ifNode = new ReservedWordNode(TreeNode::IF);
 			ifNode->insert_child($3)->insert_child($6);
-			$$ = $1 != NULL ? ifNode->insert_child($8) : ifNode; 
+			$$ = $8 != NULL ? ifNode->insert_child($8) : ifNode; 
 		}
 		;
 
@@ -336,8 +336,8 @@ structAccess:
 expression:
 		NOT booleanExpression {auto unOp = new UnaryOperatorNode(TreeNode::NOT); $$ = unOp->set_child($2);}
 		| OP_PARENS expression CL_PARENS {$$ = $2;}
-		| TRUE boolRelOp2 {$$ = $2->set_left_child(new LiteralNode("BOOLEAN", true));}
-		| FALSE boolRelOp2 {$$ = $2->set_left_child(new LiteralNode("BOOLEAN", false));}
+		| TRUE boolRelOp2 {$$ = $2 != NULL ? $2->set_left_child(new LiteralNode("BOOLEAN", true)) : dynamic_cast<TreeNode*>(new LiteralNode("BOOLEAN", true));}
+		| FALSE boolRelOp2 {$$ = $2 != NULL ? $2->set_left_child(new LiteralNode("BOOLEAN", false)) : dynamic_cast<TreeNode*>(new LiteralNode("BOOLEAN", false));}
 		| mutableOrFunctionCall expOp {$$ = $2 != NULL ? $2->set_left_child($1) : $1;}
 		| numLiteral numRelOp {$$ = $2 != NULL ? $2->set_left_child($1) : (TreeNode*)$1;}
 		| unaryNumOp numLiteral numRelOp {$$ = $3 != NULL ? $3->set_left_child($1->set_child($2)) : (TreeNode*)$1->set_child($2);}
@@ -367,10 +367,10 @@ numRelOp:
 		;
 
 booleanExpression:
-		NOT booleanExpression boolOp {auto unOp = new UnaryOperatorNode(TreeNode::NOT); $$ = $3->set_left_child(unOp->set_child($2));}
+		NOT booleanExpression boolOp {auto unOp = new UnaryOperatorNode(TreeNode::NOT); unOp->set_child($2); $$ = $3 != NULL ? $3->set_left_child(unOp) : dynamic_cast<TreeNode*>(unOp);}
 		| mutableOrFunctionCall boolRelOp {$$ = $2 != NULL ? $2->set_left_child($1) : $1;}
 		| numLiteral numOp booleanExpression1 {$$ = $2 != NULL ? $3->set_left_child($2->set_left_child($1)) : $3->set_left_child($1);} 
-		| OP_PARENS booleanExpression CL_PARENS boolOp {$$ = $2;}
+		| OP_PARENS booleanExpression CL_PARENS boolOp {$$ = $4 != NULL ? $4->set_left_child($2) : $2;}
 		| TRUE boolOp {$$ = $2 != NULL ? $2->set_left_child(new LiteralNode("BOOLEAN", true)) : (TreeNode*)new LiteralNode("BOOLEAN", true);}
 		| FALSE boolOp {$$ = $2 != NULL ? $2->set_left_child(new LiteralNode("BOOLEAN", false)) : (TreeNode*)new LiteralNode("BOOLEAN", false);}
 		;

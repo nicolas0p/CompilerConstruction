@@ -1,6 +1,7 @@
 #include "../include/TreeNode.h"
 
 TreeNode::TreeNode(){}
+TreeNode::~TreeNode(){}
 
 VariableNode::VariableNode(const char* type, const char* name) {
 	this->_type = type;
