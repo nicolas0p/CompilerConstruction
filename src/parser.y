@@ -134,11 +134,11 @@ declarations:
 		declarations functionDeclaration {syntax_tree.insert_node($2);}
 		| declarations structDeclaration {syntax_tree.insert_node($2);}
 		/* empty */
-		|
+		| 
 		;
 
 functionDeclaration:
-		returnType ID OP_PARENS parameters CL_PARENS OP_CURLY statementList CL_CURLY {$$ = new FunctionDeclarationNode($2, $1, *$4);}
+		returnType ID OP_PARENS parameters CL_PARENS OP_CURLY statementList CL_CURLY {$$ = new FunctionDeclarationNode($2, $1, *$4, $7);}
 		| error OP_CURLY statementList CL_CURLY {print_error("Function declaration: Before '{'");}
 		;
 
@@ -154,7 +154,7 @@ paramList:
 		;
 
 main:
-		NUM MAIN OP_PARENS mainParameters CL_PARENS OP_CURLY statementList CL_CURLY {$$ = new FunctionDeclarationNode($2, $1, *$4);}
+		NUM MAIN OP_PARENS mainParameters CL_PARENS OP_CURLY statementList CL_CURLY {$$ = new FunctionDeclarationNode($2, $1, *$4, $7);}
 		| error OP_CURLY statementList CL_CURLY {print_error("Main declaration: Before '{'");}
 		;
 

@@ -82,14 +82,14 @@ class UnaryOperatorNode : public TreeNode {
 
 class FunctionDeclarationNode : public TreeNode {
 	public:
-		FunctionDeclarationNode(const char* name, const char* return_type, const std::list<const VariableNode*>& parameters);
+		FunctionDeclarationNode(const char* name, const char* return_type, const std::list<const VariableNode*>& parameters, const std::list<const TreeNode*>* statements);
 		~FunctionDeclarationNode();
 
-		// FunctionDeclarationNode* set_children(std::list<const TreeNode*>& statements);
 	private:
 		std::string _name;
 		std::string _return_type;
 		std::list<const VariableNode*> _parameters;
+		const std::list<const TreeNode*>* _statements;
 };
 
 class StructNode : public TreeNode {

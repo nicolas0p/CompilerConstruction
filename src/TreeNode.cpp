@@ -57,10 +57,11 @@ UnaryOperatorNode* UnaryOperatorNode::set_child(const TreeNode* node) {
 	return this;
 }
 
-FunctionDeclarationNode::FunctionDeclarationNode(const char* name, const char* return_type, const std::list<const VariableNode*>& parameters) {
+FunctionDeclarationNode::FunctionDeclarationNode(const char* name, const char* return_type, const std::list<const VariableNode*>& parameters, const std::list<const TreeNode*>* statements) {
 	this-> _name = name;
 	this-> _return_type = return_type;
 	this->_parameters = parameters;
+	this->_statements = statements;
 }
 FunctionDeclarationNode::~FunctionDeclarationNode(){}
 
