@@ -166,7 +166,7 @@ mainParameters:
 
 statementList:
 		statementList statement {
-			if ($2 != NULL) {
+			if ($2 != nullptr) {
 				$1->push_back($2);
 			}
 			$$ = $1;
@@ -188,13 +188,13 @@ statement:
 		;
 
 variableDeclaration:
-		typeSpecifier ID variableDeclaration1 {$$ = $3 != NULL ? $3->set_left_child(new VariableNode($1, $2)) : (TreeNode*)new VariableNode($1, $2);}
+		typeSpecifier ID variableDeclaration1 {$$ = $3 != nullptr ? $3->set_left_child(new VariableNode($1, $2)) : (TreeNode*)new VariableNode($1, $2);}
 		;
 
 /*created to remove ambiguity*/
 variableDeclaration1:
 		ATTRIBUTION expression {auto op = new OperatorNode(TreeNode::Operator::ATTRIBUTION); $$ = op->set_right_child($2);}
-		| {$$ = NULL;}
+		| {$$ = nullptr;}
 		;
 
 variableAttribution:
@@ -239,11 +239,11 @@ breakStatement:
 		;
 
 returnStatement:
-		RETURN returnExpression {auto ret = new ReservedWordNode(TreeNode::RETURN); $$ = $2 != NULL ? ret->insert_child($2) : ret;}
+		RETURN returnExpression {auto ret = new ReservedWordNode(TreeNode::RETURN); $$ = $2 != nullptr ? ret->insert_child($2) : ret;}
 		;
 
 returnExpression:
-		SEMICOLON {$$ = NULL;}
+		SEMICOLON {$$ = nullptr;}
 		| expression SEMICOLON {$$ = $1;}
 		;
 
@@ -261,13 +261,13 @@ conditionalStatement:
 		IF OP_PARENS booleanExpression CL_PARENS OP_CURLY statementList CL_CURLY conditionalStatement1 {
 			auto ifNode = new ReservedWordNode(TreeNode::IF);
 			ifNode->insert_child($3)->insert_child($6);
-			$$ = $8 != NULL ? ifNode->insert_child($8) : ifNode; 
+			$$ = $8 != nullptr ? ifNode->insert_child($8) : ifNode; 
 		}
 		;
 
 conditionalStatement1:
 		ELSE conditionalStatement2 {$$ = $2;}
-		| {$$ = NULL;}
+		| {$$ = nullptr;}
 		;
 
 conditionalStatement2:
@@ -285,7 +285,7 @@ conditionalStatement2:
 
 expressionStatement:
 		expression SEMICOLON {$$ = $1;}
-		| SEMICOLON {$$ = NULL;}
+		| SEMICOLON {$$ = nullptr;}
 		;
 
 returnType:
@@ -294,15 +294,15 @@ returnType:
 		;
 
 typeSpecifier:
-		NUM arrayDef {$$ = (std::string($1) + std::string($2)).c_str();}
-		| BOOLEAN arrayDef {$$ = (std::string($1) + std::string($2)).c_str();}
-		| CHAR arrayDef {$$ = (std::string($1) + std::string($2)).c_str();}
+		NUM arrayDef {$$ = ($2 != nullptr ? (std::string($1) + std::string($2)).c_str() : std::string($1).c_str());}
+		| BOOLEAN arrayDef {$$ = ($2 != nullptr ? (std::string($1) + std::string($2)).c_str() : std::string($1).c_str());}
+		| CHAR arrayDef {$$ = ($2 != nullptr ? (std::string($1) + std::string($2)).c_str() : std::string($1).c_str());}
 		| ID {$$ = $1;}
 		;
 
 arrayDef:
 		OP_SQUARE arrayDef1 {$$ = (std::string("[") + std::string($2)).c_str();}
-		| {$$ = (const char*) new char(' ');}
+		| {$$ = nullptr;}
 		;
 
 arrayDef1:
@@ -311,11 +311,11 @@ arrayDef1:
 		;
 
 mutableOrFunctionCall:
-		ID mutableOrFunctionCall1 {$$ = $2 != NULL ? $2->set_child(new IdNode($1)) : (TreeNode*)$1;}
+		ID mutableOrFunctionCall1 {$$ = $2 != nullptr ? $2->set_child(new IdNode($1)) : (TreeNode*)$1;}
 		;
 
 mutableOrFunctionCall1:
-		OP_PARENS args CL_PARENS access {$$ = $4 != NULL ? $4->set_child(new FunctionCallNode($2)) : dynamic_cast<AccessNode*>(new FunctionCallNode($2));}
+		OP_PARENS args CL_PARENS access {$$ = $4 != nullptr ? $4->set_child(new FunctionCallNode($2)) : dynamic_cast<AccessNode*>(new FunctionCallNode($2));}
 		| access {$$ = $1;}
 		;
 
@@ -325,22 +325,22 @@ access:
 		;
 
 arrayAccess:
-		OP_SQUARE numExpression CL_SQUARE structAccess {$$ = $4 != NULL ? $4->set_child(new ArrayAccessNode($2)) : new ArrayAccessNode($2);}
+		OP_SQUARE numExpression CL_SQUARE structAccess {$$ = $4 != nullptr ? $4->set_child(new ArrayAccessNode($2)) : new ArrayAccessNode($2);}
 		;
 
 structAccess:
-		PERIOD ID access {$$ = $3 != NULL ? $3->set_child(new IdNode($2)) : new IdNode($2);}
-		| {$$ = NULL;}
+		PERIOD ID access {$$ = $3 != nullptr ? $3->set_child(new IdNode($2)) : new IdNode($2);}
+		| {$$ = nullptr;}
 		;
 
 expression:
 		NOT booleanExpression {auto unOp = new UnaryOperatorNode(TreeNode::NOT); $$ = unOp->set_child($2);}
 		| OP_PARENS expression CL_PARENS {$$ = $2;}
-		| TRUE boolRelOp2 {$$ = $2 != NULL ? $2->set_left_child(new LiteralNode("BOOLEAN", true)) : dynamic_cast<TreeNode*>(new LiteralNode("BOOLEAN", true));}
-		| FALSE boolRelOp2 {$$ = $2 != NULL ? $2->set_left_child(new LiteralNode("BOOLEAN", false)) : dynamic_cast<TreeNode*>(new LiteralNode("BOOLEAN", false));}
-		| mutableOrFunctionCall expOp {$$ = $2 != NULL ? $2->set_left_child($1) : $1;}
-		| numLiteral numRelOp {$$ = $2 != NULL ? $2->set_left_child($1) : (TreeNode*)$1;}
-		| unaryNumOp numLiteral numRelOp {$$ = $3 != NULL ? $3->set_left_child($1->set_child($2)) : (TreeNode*)$1->set_child($2);}
+		| TRUE boolRelOp2 {$$ = $2 != nullptr ? $2->set_left_child(new LiteralNode("BOOLEAN", true)) : dynamic_cast<TreeNode*>(new LiteralNode("BOOLEAN", true));}
+		| FALSE boolRelOp2 {$$ = $2 != nullptr ? $2->set_left_child(new LiteralNode("BOOLEAN", false)) : dynamic_cast<TreeNode*>(new LiteralNode("BOOLEAN", false));}
+		| mutableOrFunctionCall expOp {$$ = $2 != nullptr ? $2->set_left_child($1) : $1;}
+		| numLiteral numRelOp {$$ = $2 != nullptr ? $2->set_left_child($1) : (TreeNode*)$1;}
+		| unaryNumOp numLiteral numRelOp {$$ = $3 != nullptr ? $3->set_left_child($1->set_child($2)) : (TreeNode*)$1->set_child($2);}
 		| STRINGLITERAL {$$ = new LiteralNode("CHAR", $1);} //TODO remove ""
 		| CHARLITERAL {$$ = new LiteralNode("CHAR", $1);} //TODO remove ''
 		;
@@ -350,29 +350,29 @@ expOp:
 		| boolOp1 {$$ = $1;}
 		| relOpNum numExpression boolOp {
 			$1->set_right_child($2);
-			$$ = $3 != NULL ? $3->set_left_child($1) : $1;
+			$$ = $3 != nullptr ? $3->set_left_child($1) : $1;
 		}
 		| relOp expression boolOp {
 			$1->set_right_child($2);
-			$$ = $3 != NULL ? $3->set_left_child($1) : $1;
+			$$ = $3 != nullptr ? $3->set_left_child($1) : $1;
 		}
-		| {$$ = NULL;}
+		| {$$ = nullptr;}
 		;
 
 numRelOp:
 		numOp1 {$$ = $1;}
 		| relOpNum numExpression {$$ = $1->set_right_child($2);}
 		| relOp expression {$$ = $1->set_right_child($2);}
-		| {$$ = NULL;}
+		| {$$ = nullptr;}
 		;
 
 booleanExpression:
-		NOT booleanExpression boolOp {auto unOp = new UnaryOperatorNode(TreeNode::NOT); unOp->set_child($2); $$ = $3 != NULL ? $3->set_left_child(unOp) : dynamic_cast<TreeNode*>(unOp);}
-		| mutableOrFunctionCall boolRelOp {$$ = $2 != NULL ? $2->set_left_child($1) : $1;}
-		| numLiteral numOp booleanExpression1 {$$ = $2 != NULL ? $3->set_left_child($2->set_left_child($1)) : $3->set_left_child($1);} 
-		| OP_PARENS booleanExpression CL_PARENS boolOp {$$ = $4 != NULL ? $4->set_left_child($2) : $2;}
-		| TRUE boolOp {$$ = $2 != NULL ? $2->set_left_child(new LiteralNode("BOOLEAN", true)) : (TreeNode*)new LiteralNode("BOOLEAN", true);}
-		| FALSE boolOp {$$ = $2 != NULL ? $2->set_left_child(new LiteralNode("BOOLEAN", false)) : (TreeNode*)new LiteralNode("BOOLEAN", false);}
+		NOT booleanExpression boolOp {auto unOp = new UnaryOperatorNode(TreeNode::NOT); unOp->set_child($2); $$ = $3 != nullptr ? $3->set_left_child(unOp) : dynamic_cast<TreeNode*>(unOp);}
+		| mutableOrFunctionCall boolRelOp {$$ = $2 != nullptr ? $2->set_left_child($1) : $1;}
+		| numLiteral numOp booleanExpression1 {$$ = $2 != nullptr ? $3->set_left_child($2->set_left_child($1)) : $3->set_left_child($1);} 
+		| OP_PARENS booleanExpression CL_PARENS boolOp {$$ = $4 != nullptr ? $4->set_left_child($2) : $2;}
+		| TRUE boolOp {$$ = $2 != nullptr ? $2->set_left_child(new LiteralNode("BOOLEAN", true)) : (TreeNode*)new LiteralNode("BOOLEAN", true);}
+		| FALSE boolOp {$$ = $2 != nullptr ? $2->set_left_child(new LiteralNode("BOOLEAN", false)) : (TreeNode*)new LiteralNode("BOOLEAN", false);}
 		;
 
 booleanExpression1:
@@ -383,7 +383,7 @@ booleanExpression1:
 boolOp:
 		AND booleanExpression {auto opNode = new OperatorNode(TreeNode::AND); $$ = opNode->set_right_child($2);}
 		| OR booleanExpression {auto opNode = new OperatorNode(TreeNode::OR); $$ = opNode->set_right_child($2);}
-		| {$$ = NULL;}
+		| {$$ = nullptr;}
 		;
 
 boolOp1:
@@ -394,13 +394,13 @@ boolOp1:
 boolRelOp:
 		boolOp {$$ = $1;}
 		| relOp boolRelOp1 {$$ = $1->set_right_child($2);}
-		| relOpNum numExpression boolOp {$1->set_right_child($2); $$ = $3 != NULL ? $3->set_left_child($1) : $1;}
+		| relOpNum numExpression boolOp {$1->set_right_child($2); $$ = $3 != nullptr ? $3->set_left_child($1) : $1;}
 		;
 
 boolRelOp1:
-		numExpression boolOp {$$ = $2 != NULL ? $2->set_left_child($1) : $1;}
-		| TRUE boolOp {$$ = $2 != NULL ? $2->set_left_child(new LiteralNode("BOOLEAN", true)) : (TreeNode*)new LiteralNode("BOOLEAN", true);}
-		| FALSE boolOp {$$ = $2 != NULL ? $2->set_left_child(new LiteralNode("BOOLEAN", false)) : (TreeNode*)new LiteralNode("BOOLEAN", false);}
+		numExpression boolOp {$$ = $2 != nullptr ? $2->set_left_child($1) : $1;}
+		| TRUE boolOp {$$ = $2 != nullptr ? $2->set_left_child(new LiteralNode("BOOLEAN", true)) : (TreeNode*)new LiteralNode("BOOLEAN", true);}
+		| FALSE boolOp {$$ = $2 != nullptr ? $2->set_left_child(new LiteralNode("BOOLEAN", false)) : (TreeNode*)new LiteralNode("BOOLEAN", false);}
 		;
 
 boolRelOp2:
@@ -421,10 +421,10 @@ relOpNum:
 		;
 
 numExpression:
-		unaryNumOp unaryNumExpression numOp {$1->set_child($2); $$ = $3 != NULL ? (TreeNode*)$3->set_left_child($1) : $1;}
-		| mutableOrFunctionCall numOp {$$ = $2 != NULL ? $2->set_left_child($1) : $1;}
-		| OP_PARENS numExpression CL_PARENS numOp {$$ = $4 != NULL ? $4->set_left_child($2) : $2;}
-		| numLiteral numOp {$$ = $2 != NULL ? $2->set_left_child($1) : (TreeNode*)$1;}
+		unaryNumOp unaryNumExpression numOp {$1->set_child($2); $$ = $3 != nullptr ? (TreeNode*)$3->set_left_child($1) : $1;}
+		| mutableOrFunctionCall numOp {$$ = $2 != nullptr ? $2->set_left_child($1) : $1;}
+		| OP_PARENS numExpression CL_PARENS numOp {$$ = $4 != nullptr ? $4->set_left_child($2) : $2;}
+		| numLiteral numOp {$$ = $2 != nullptr ? $2->set_left_child($1) : (TreeNode*)$1;}
 		;
 
 numOp:
@@ -433,7 +433,7 @@ numOp:
 		| TIMES numExpression {auto opNode = new OperatorNode(TreeNode::TIMES); $$ = opNode->set_right_child($2);}
 		| DIVIDE numExpression {auto opNode = new OperatorNode(TreeNode::DIVIDE); $$ = opNode->set_right_child($2);}
 		| MOD numExpression {auto opNode = new OperatorNode(TreeNode::MOD); $$ = opNode->set_right_child($2);}
-		| {$$ = NULL;}
+		| {$$ = nullptr;}
 		;
 
 numOp1:
