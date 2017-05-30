@@ -14,6 +14,7 @@ extern "C" FILE *yyin;
 
 extern void yyerror(const char* s);
 extern void print_error(const char* s);
+extern int yylineno;
 
 ifstream open_file;
 
@@ -33,7 +34,13 @@ extern SyntaxTree syntax_tree;
 //this goes in the .cpp
 %code top {
 #include "SyntaxTree.h"
+#include "SymbolTable.h"
 SyntaxTree syntax_tree;
+SymbolTable symbol_table;
+
+using std::string;
+
+std::deque<std::pair<int, string>> error_list;
 }
 
 %define parse.error verbose
@@ -49,9 +56,9 @@ SyntaxTree syntax_tree;
 	ReservedWordNode* rwNode;
 	LiteralNode* litNode;
 	AccessNode* acsNode;
-	std::list<std::string>* string_list;
-	std::list<const VariableNode*>* variable_list;
-	std::list<const TreeNode*>* node_list;
+	std::deque<std::string>* string_list;
+	std::deque<const VariableNode*>* variable_list;
+	std::deque<const TreeNode*>* node_list;
 }
 
 %token <ival> INTLITERAL
@@ -145,12 +152,12 @@ functionDeclaration:
 parameters:
 		paramList {$$ = $1;} // {$$ = $1;} is the default action
 		/* empty */
-		| {$$ = new std::list<const VariableNode*>();}
+		| {$$ = new std::deque<const VariableNode*>();}
 		;
 
 paramList:
 		paramList COMMA typeSpecifier ID {$1->push_back(new VariableNode($3, $4)); $$ = $1;}
-		| typeSpecifier ID {auto list = new std::list<const VariableNode*>({new VariableNode($1, $2)}); $$ = list;}
+		| typeSpecifier ID {auto list = new std::deque<const VariableNode*>({new VariableNode($1, $2)}); $$ = list;}
 		;
 
 main:
@@ -159,9 +166,9 @@ main:
 		;
 
 mainParameters:
-		NUM ID COMMA CHAR OP_SQUARE CL_SQUARE ID {$$ = new std::list<const VariableNode*>({new VariableNode($1, $2), new VariableNode("char[]", $7)});}
+		NUM ID COMMA CHAR OP_SQUARE CL_SQUARE ID {$$ = new std::deque<const VariableNode*>({new VariableNode($1, $2), new VariableNode("char[]", $7)});}
 		/* empty */
-		| {$$ = new std::list<const VariableNode*>();}
+		| {$$ = new std::deque<const VariableNode*>();}
 		;
 
 statementList:
@@ -172,7 +179,7 @@ statementList:
 			$$ = $1;
 		}
 		/* empty */
-		| {auto list = new std::list<const TreeNode*>(); $$ = list;}
+		| {auto list = new std::deque<const TreeNode*>(); $$ = list;}
 		;
 
 statement:
@@ -226,12 +233,12 @@ loopStatement:
 
 args:
 		argList {$$ = $1;}
-		| {$$ = new std::list<const TreeNode*>();}
+		| {$$ = new std::deque<const TreeNode*>();}
 		;
 
 argList:
 		argList COMMA expression {$$ = $1;}
-		| expression {auto list = new std::list<const TreeNode*>({$1}); $$ = list;}
+		| expression {auto list = new std::deque<const TreeNode*>({$1}); $$ = list;}
 		;
 
 breakStatement:
@@ -248,13 +255,21 @@ returnExpression:
 		;
 
 structDeclaration:
-		STRUCT ID OP_CURLY variableDeclarationNoValueList CL_CURLY SEMICOLON {$$ = new StructNode($2, *$4);}
+		STRUCT ID OP_CURLY variableDeclarationNoValueList CL_CURLY SEMICOLON {
+            if (symbol_table.findStructure($2) != nullptr) {
+                error_list.push_back(std::pair<int, std::string>(yylineno, "A struct with name \"" + std::string($2) + "\" was already defined"));
+            $$ = nullptr;
+            }
+            else {
+            symbol_table.addStructure(structure(string($2), *$4));
+            $$ = new StructNode($2, *$4);}
+        }
 		| STRUCT error SEMICOLON {print_error("Struct declaration: Before ';'");}
 		;
 
 variableDeclarationNoValueList:
 		variableDeclarationNoValueList typeSpecifier ID SEMICOLON {$1->push_back(new VariableNode($2, $3));}
-		| typeSpecifier ID SEMICOLON {auto list = new std::list<const VariableNode*>({new VariableNode($1, $2)}); $$ = list;}
+		| typeSpecifier ID SEMICOLON {auto list = new std::deque<const VariableNode*>({new VariableNode($1, $2)}); $$ = list;}
 		;
 
 conditionalStatement:
@@ -475,7 +490,7 @@ yydebug = 1;
 	FILE *myfile = fopen(argv[1], "r");
 	// make sure it is valid:
 	if (!myfile) {
-		cout << "I can't open the file!" << endl;
+		cout << "I can't open the file! :( " << endl;
 		return -1;
 	}
 	open_file.open(argv[1], ios::in);
@@ -485,4 +500,7 @@ yydebug = 1;
 	do {
 		yyparse();
 	} while (!feof(yyin));
+    for (std::pair<int, string> i : error_list) {
+        std::cout << "<Line " << std::to_string(i.first) << "> error: "  << i.second << std::endl;
+    }
 }

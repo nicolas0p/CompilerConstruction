@@ -1,7 +1,7 @@
 #ifndef TREENODE_H
 #define TREENODE_H
 
-#include <list>
+#include <deque>
 #include <string>
 
 class TreeNode
@@ -27,6 +27,10 @@ class VariableNode : public TreeNode {
 	public:
 		VariableNode(const char* type, const char* name);
 		~VariableNode();
+
+        std::string name() const {return std::string{_name};};
+        std::string type() const {return std::string{_type};};
+
 	private:
 		std::string _type;
 		std::string _name;
@@ -82,23 +86,23 @@ class UnaryOperatorNode : public TreeNode {
 
 class FunctionDeclarationNode : public TreeNode {
 	public:
-		FunctionDeclarationNode(const char* name, const char* return_type, const std::list<const VariableNode*>& parameters, const std::list<const TreeNode*>* statements);
+		FunctionDeclarationNode(const char* name, const char* return_type, const std::deque<const VariableNode*>& parameters, const std::deque<const TreeNode*>* statements);
 		~FunctionDeclarationNode();
 
 	private:
 		std::string _name;
 		std::string _return_type;
-		std::list<const VariableNode*> _parameters;
-		const std::list<const TreeNode*>* _statements;
+		std::deque<const VariableNode*> _parameters;
+		const std::deque<const TreeNode*>* _statements;
 };
 
 class StructNode : public TreeNode {
 	public:
-		StructNode(const char* name, const std::list<const VariableNode*>& variables);
+		StructNode(const char* name, const std::deque<const VariableNode*>& variables);
 		~StructNode();
 	private:
 		std::string _name;
-		std::list<const VariableNode*> _variables;
+		std::deque<const VariableNode*> _variables;
 };
 
 class AccessNode : public TreeNode {
@@ -118,12 +122,12 @@ class IdNode : public AccessNode {
 
 class FunctionCallNode : public AccessNode {
 	public:
-		FunctionCallNode(const IdNode* name, const std::list<const TreeNode*>* parameters);
-		FunctionCallNode(const std::list<const TreeNode*>* parameters);
+		FunctionCallNode(const IdNode* name, const std::deque<const TreeNode*>* parameters);
+		FunctionCallNode(const std::deque<const TreeNode*>* parameters);
 		~FunctionCallNode();
 
 	private:
-		const std::list<const TreeNode*>* _parameters;
+		const std::deque<const TreeNode*>* _parameters;
 };
 
 class ArrayAccessNode : public AccessNode {
@@ -142,10 +146,10 @@ class ReservedWordNode : public TreeNode {
 		~ReservedWordNode();
 
 		ReservedWordNode* insert_child(const TreeNode*);
-		ReservedWordNode* insert_child(std::list<const TreeNode*>*);
+		ReservedWordNode* insert_child(std::deque<const TreeNode*>*);
 	private:
 		ReservedWord _word;
-		std::list<const TreeNode*> _nodes;
+		std::deque<const TreeNode*> _nodes;
 };
 
 #endif /* TREENODE_H */

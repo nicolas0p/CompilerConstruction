@@ -57,7 +57,7 @@ UnaryOperatorNode* UnaryOperatorNode::set_child(const TreeNode* node) {
 	return this;
 }
 
-FunctionDeclarationNode::FunctionDeclarationNode(const char* name, const char* return_type, const std::list<const VariableNode*>& parameters, const std::list<const TreeNode*>* statements) {
+FunctionDeclarationNode::FunctionDeclarationNode(const char* name, const char* return_type, const std::deque<const VariableNode*>& parameters, const std::deque<const TreeNode*>* statements) {
 	this-> _name = name;
 	this-> _return_type = return_type;
 	this->_parameters = parameters;
@@ -65,16 +65,16 @@ FunctionDeclarationNode::FunctionDeclarationNode(const char* name, const char* r
 }
 FunctionDeclarationNode::~FunctionDeclarationNode(){}
 
-FunctionCallNode::FunctionCallNode(const IdNode* name, const std::list<const TreeNode*>* parameters) {
+FunctionCallNode::FunctionCallNode(const IdNode* name, const std::deque<const TreeNode*>* parameters) {
 	this->_name = name->_name;
 	this->_parameters = parameters;
 }
-FunctionCallNode::FunctionCallNode(const std::list<const TreeNode*>* parameters) {
+FunctionCallNode::FunctionCallNode(const std::deque<const TreeNode*>* parameters) {
 	this->_parameters = parameters;	
 }
 FunctionCallNode::~FunctionCallNode(){}
 
-StructNode::StructNode(const char* name, const std::list<const VariableNode*>& variables) {
+StructNode::StructNode(const char* name, const std::deque<const VariableNode*>& variables) {
 	this-> _name = name;
 	this->_variables = variables;
 }
@@ -103,14 +103,16 @@ ArrayAccessNode::~ArrayAccessNode(){}
 
 ReservedWordNode::ReservedWordNode(const ReservedWord& word) {
 	this->_word = word;
-	this->_nodes = std::list<const TreeNode*>();
+	this->_nodes = std::deque<const TreeNode*>();
 }
 ReservedWordNode::~ReservedWordNode(){}
 ReservedWordNode* ReservedWordNode::insert_child(const TreeNode* node) {
 	this->_nodes.push_back(node);
 	return this;
 }
-ReservedWordNode* ReservedWordNode::insert_child(std::list<const TreeNode*>* nodeList) {
-	this->_nodes.merge(*nodeList);
-	return this;
+ReservedWordNode* ReservedWordNode::insert_child(std::deque<const TreeNode*>* nodeList) {
+	for (auto i : *nodeList) {
+        this->_nodes.push_back(i);
+    }
+    return this;
 }

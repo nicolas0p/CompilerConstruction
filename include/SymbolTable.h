@@ -6,11 +6,21 @@
 #include <string>
 #include <tuple>
 
+#include "TreeNode.h"
+
 typedef std::string type;
 
 struct structure {
     std::string name;
     std::deque<std::pair<std::string, type>> members;
+
+    structure(std::string nm, std::deque<const VariableNode*> mmbs) : name(nm)
+    {
+        for(const VariableNode* i : mmbs) {
+            std::pair<std::string, type> to_add(i->name(), i->type());
+            members.push_back(to_add);
+        }
+    }
 };
 
 struct function {
