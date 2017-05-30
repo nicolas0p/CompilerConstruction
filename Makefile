@@ -21,7 +21,7 @@ make: $(SCANNER_FILE) $(PARSER_FILE) $(SOURCE_FILES)
 debug: $(SCANNER_FILE) $(PARSER_FILE) $(SOURCE_FILES)
 	$(FLEX) $(SCANNER_FILE)
 	$(BISON) $(PARSER_FILE)
-	$(CC) -o $(EXEC) lex.yy.c parser.tab.c $(CFLAGS) $(DEBUGFLAGS)
+	$(CC) -o $(EXEC) lex.yy.c parser.tab.c $(SOURCE_DIR)/*.cpp $(CFLAGS) $(DEBUGFLAGS) -I$(HEADERS_DIR)
 
 clean:
 	rm -f lex.yy.c parser.tab.c parser.tab.h parser.output $(EXEC) include/*.h.gch
