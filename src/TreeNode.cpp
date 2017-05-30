@@ -30,19 +30,25 @@ LiteralNode::LiteralNode(const char* type, float value) {
 }
 LiteralNode::~LiteralNode(){}
 
-OperatorNode::OperatorNode(const Operator& op) {
-	this->_operator = op;
-}
+OperatorNode::OperatorNode(){}
 OperatorNode::~OperatorNode(){}
-OperatorNode* OperatorNode::set_left_child(const TreeNode* node) {
+OperatorNode* OperatorNode::set_left_child(TreeNode* node) {
 	this->_left = node;
 	return this; 
 }
-OperatorNode* OperatorNode::set_right_child(const TreeNode* node) {
+bool OperatorNode::has_left() {
+	return this->_left != nullptr;
+}
+
+BinaryOperatorNode::BinaryOperatorNode(const Operator& op) {
+	this->_operator = op;
+}
+BinaryOperatorNode::~BinaryOperatorNode(){}
+BinaryOperatorNode* BinaryOperatorNode::set_right_child(const TreeNode* node) {
 	this->_right = node;
 	return this;
 }
-OperatorNode* OperatorNode::set_children(const TreeNode* node1, const TreeNode* node2) {
+BinaryOperatorNode* BinaryOperatorNode::set_children(TreeNode* node1, const TreeNode* node2) {
 	this->_left = node1;
 	this->_right = node2;
 	return this;
@@ -52,8 +58,13 @@ UnaryOperatorNode::UnaryOperatorNode(const UnaryOperator& op) {
 	this->_operator = op;
 }
 UnaryOperatorNode::~UnaryOperatorNode(){}
-UnaryOperatorNode* UnaryOperatorNode::set_child(const TreeNode* node) {
-	this->_child = node;
+
+CallOperatorNode::CallOperatorNode(const Operator& op) {
+	this->_operator = op;	
+}
+CallOperatorNode::~CallOperatorNode(){}
+OperatorNode* CallOperatorNode::set_right_child(const std::deque<const TreeNode*>* parameters) {
+	this->_parameters = parameters;
 	return this;
 }
 
@@ -65,41 +76,15 @@ FunctionDeclarationNode::FunctionDeclarationNode(const char* name, const char* r
 }
 FunctionDeclarationNode::~FunctionDeclarationNode(){}
 
-FunctionCallNode::FunctionCallNode(const IdNode* name, const std::deque<const TreeNode*>* parameters) {
-	this->_name = name->_name;
-	this->_parameters = parameters;
-}
-FunctionCallNode::FunctionCallNode(const std::deque<const TreeNode*>* parameters) {
-	this->_parameters = parameters;	
-}
-FunctionCallNode::~FunctionCallNode(){}
-
 StructNode::StructNode(const char* name, const std::deque<const VariableNode*>& variables) {
 	this-> _name = name;
 	this->_variables = variables;
 }
 StructNode::~StructNode(){}
-
-AccessNode::AccessNode(){}
-AccessNode::~AccessNode(){}
-AccessNode* AccessNode::set_child(const AccessNode* acsNode) {
-	this->_name = acsNode->_name;
-	return this;
-}
-
 IdNode::IdNode(const char* name) {
 	this->_name = name;
 }
 IdNode::~IdNode(){}
-
-ArrayAccessNode::ArrayAccessNode(const IdNode* idArray, const TreeNode* idxExpression) {
-	this->_name = idArray->_name;
-	this->_index_expression = idxExpression;
-}
-ArrayAccessNode::ArrayAccessNode(const TreeNode* idxExpression) {
-	this->_index_expression = idxExpression;
-}
-ArrayAccessNode::~ArrayAccessNode(){}
 
 ReservedWordNode::ReservedWordNode(const ReservedWord& word) {
 	this->_word = word;
