@@ -26,6 +26,7 @@ num[] func()
 }
 
 num main() {
+	a.a[1].a = 1;
 	teste('i', a < b + 2 && true);
 	bool a = true;
 	num in = func()[5] + 4;

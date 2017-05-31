@@ -9,9 +9,9 @@ class TreeNode
 	public:
 		TreeNode();
 		virtual ~TreeNode();
-		
+
 		enum Operator {
-			PLUS, MINUS, TIMES, DIVIDE, MOD, AND, OR, ATTRIBUTION, EQUAL, NOT_EQUAL, GREATER, LESS, GREATER_EQ, LESS_EQ
+			PLUS, MINUS, TIMES, DIVIDE, MOD, AND, OR, ATTRIBUTION, EQUAL, NOT_EQUAL, GREATER, LESS, GREATER_EQ, LESS_EQ, STRUCT, ARRAY, CALL
 		};
 
 		enum UnaryOperator {
@@ -61,27 +61,44 @@ class LiteralNode : public TreeNode {
 
 class OperatorNode : public TreeNode {
 	public:
-		OperatorNode(const Operator& op);
+		OperatorNode();
 		~OperatorNode();
 
-		OperatorNode* set_children(const TreeNode* node1, const TreeNode* node2);
-		OperatorNode* set_left_child(const TreeNode* node);
-		OperatorNode* set_right_child(const TreeNode* node);
+		OperatorNode* set_left_child(TreeNode* node);
+		bool has_left();
+		TreeNode* _left;		
+};
+
+class BinaryOperatorNode : public OperatorNode {
+	public:
+		BinaryOperatorNode(const Operator& op);
+		~BinaryOperatorNode();
+
+		BinaryOperatorNode* set_children(TreeNode* node1, const TreeNode* node2);
+		BinaryOperatorNode* set_right_child(const TreeNode* node);
 	private:
 		Operator _operator;
-		const TreeNode* _left;
 		const TreeNode* _right;
 };
 
-class UnaryOperatorNode : public TreeNode {
+class UnaryOperatorNode : public OperatorNode {
 	public:
 		UnaryOperatorNode(const UnaryOperator& op);
 		~UnaryOperatorNode();
 
-		UnaryOperatorNode* set_child(const TreeNode* node);
 	private:
 		UnaryOperator _operator;
-		const TreeNode* _child;
+};
+
+class CallOperatorNode : public OperatorNode {
+	public:
+		CallOperatorNode(const Operator& op);
+		~CallOperatorNode();
+
+		OperatorNode* set_right_child(const std::deque<const TreeNode*>* parameters);
+	private:
+		Operator _operator;
+		const std::deque<const TreeNode*>* _parameters;
 };
 
 class FunctionDeclarationNode : public TreeNode {
@@ -105,39 +122,12 @@ class StructNode : public TreeNode {
 		std::deque<const VariableNode*> _variables;
 };
 
-class AccessNode : public TreeNode {
-	public:
-		AccessNode();
-		virtual ~AccessNode();
-
-		AccessNode* set_child(const AccessNode* name);
-		std::string _name;	
-};
-
-class IdNode : public AccessNode {
+class IdNode : public TreeNode {
 	public:
 		IdNode(const char* name);
 		~IdNode();
-};
-
-class FunctionCallNode : public AccessNode {
-	public:
-		FunctionCallNode(const IdNode* name, const std::deque<const TreeNode*>* parameters);
-		FunctionCallNode(const std::deque<const TreeNode*>* parameters);
-		~FunctionCallNode();
-
 	private:
-		const std::deque<const TreeNode*>* _parameters;
-};
-
-class ArrayAccessNode : public AccessNode {
-	public:
-		ArrayAccessNode(const IdNode* idArray, const TreeNode* idxExpression);
-		ArrayAccessNode(const TreeNode* idxExpression);
-		~ArrayAccessNode();
-
-	private:
-		const TreeNode* _index_expression;
+		std::string _name;
 };
 
 class ReservedWordNode : public TreeNode {

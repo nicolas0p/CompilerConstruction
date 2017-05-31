@@ -52,10 +52,10 @@ std::deque<std::pair<int, string>> error_list;
 	bool bval;
 	TreeNode* node;
 	OperatorNode* opNode;
+	BinaryOperatorNode* biOpNode;
 	UnaryOperatorNode* unOpNode;
 	ReservedWordNode* rwNode;
 	LiteralNode* litNode;
-	AccessNode* acsNode;
 	std::deque<std::string>* string_list;
 	std::deque<const VariableNode*>* variable_list;
 	std::deque<const TreeNode*>* node_list;
@@ -108,14 +108,14 @@ std::deque<std::pair<int, string>> error_list;
 %type <opNode> boolRelOp
 %type <opNode> boolRelOp2
 %type <node> boolRelOp1
-%type <opNode> numRelOp
+%type <biOpNode> numRelOp
 %type <opNode> expOp
 %type <opNode> boolOp
 %type <opNode> boolOp1
-%type <opNode> numOp
-%type <opNode> numOp1
-%type <opNode> relOp
-%type <opNode> relOpNum
+%type <biOpNode> numOp
+%type <biOpNode> numOp1
+%type <biOpNode> relOp
+%type <biOpNode> relOpNum
 %type <unOpNode> unaryNumOp
 %type <variable_list> parameters
 %type <variable_list> paramList
@@ -126,10 +126,10 @@ std::deque<std::pair<int, string>> error_list;
 %type <charp> arrayDef1
 %type <litNode> numLiteral
 %type <node> mutableOrFunctionCall
-%type <acsNode> mutableOrFunctionCall1
-%type <acsNode> access
-%type <acsNode> arrayAccess
-%type <acsNode> structAccess
+%type <opNode> mutableOrFunctionCall1
+%type <biOpNode> access
+%type <biOpNode> arrayAccess
+%type <biOpNode> structAccess
 
 
 %%
@@ -200,7 +200,7 @@ variableDeclaration:
 
 /*created to remove ambiguity*/
 variableDeclaration1:
-		ATTRIBUTION expression {auto op = new OperatorNode(TreeNode::Operator::ATTRIBUTION); $$ = op->set_right_child($2);}
+		ATTRIBUTION expression {auto op = new BinaryOperatorNode(TreeNode::Operator::ATTRIBUTION); $$ = op->set_right_child($2);}
 		| {$$ = nullptr;}
 		;
 
@@ -209,8 +209,8 @@ variableAttribution:
 		;
 
 variableAttribution1:
-		ATTRIBUTION expression {auto op = new OperatorNode(TreeNode::Operator::ATTRIBUTION); $$ = op->set_right_child($2);}
-		| arrayAccess ATTRIBUTION expression {auto op = new OperatorNode(TreeNode::Operator::ATTRIBUTION); $$ = op->set_left_child($1)->set_right_child($3);}
+		ATTRIBUTION expression {auto op = new BinaryOperatorNode(TreeNode::Operator::ATTRIBUTION); $$ = op->set_right_child($2);}
+		| access ATTRIBUTION expression {auto op = new BinaryOperatorNode(TreeNode::Operator::ATTRIBUTION); $$ = op->set_children($1, $3);}
 		;
 
 variableAttrOrDecla:
@@ -326,11 +326,11 @@ arrayDef1:
 		;
 
 mutableOrFunctionCall:
-		ID mutableOrFunctionCall1 {$$ = $2 != nullptr ? $2->set_child(new IdNode($1)) : (TreeNode*)$1;}
+		ID mutableOrFunctionCall1 {$$ = $2 != nullptr ? $2->set_left_child(new IdNode($1)) : dynamic_cast<TreeNode*>(new IdNode($1));}
 		;
 
 mutableOrFunctionCall1:
-		OP_PARENS args CL_PARENS access {$$ = $4 != nullptr ? $4->set_child(new FunctionCallNode($2)) : dynamic_cast<AccessNode*>(new FunctionCallNode($2));}
+		OP_PARENS args CL_PARENS access {auto cOp = new CallOperatorNode(TreeNode::CALL); $$ = $4 != nullptr ? $4->set_left_child(cOp->set_right_child($2)) : cOp->set_right_child($2);}
 		| access {$$ = $1;}
 		;
 
@@ -340,22 +340,39 @@ access:
 		;
 
 arrayAccess:
-		OP_SQUARE numExpression CL_SQUARE structAccess {$$ = $4 != nullptr ? $4->set_child(new ArrayAccessNode($2)) : new ArrayAccessNode($2);}
+		OP_SQUARE numExpression CL_SQUARE structAccess {
+			auto bOp = new BinaryOperatorNode(TreeNode::ARRAY);
+			bOp->set_right_child($2);
+			if ($4 != nullptr) {
+				$4->set_left_child(bOp);
+				$$ = $4;
+			} else {
+				$$ = bOp;
+			}
+		}
 		;
 
 structAccess:
-		PERIOD ID access {$$ = $3 != nullptr ? $3->set_child(new IdNode($2)) : new IdNode($2);}
+		PERIOD ID access {
+			auto bOp = new BinaryOperatorNode(TreeNode::STRUCT);
+			if ($3 != nullptr) {
+				$3->set_left_child(bOp->set_right_child(new IdNode($2)));
+				$$ = $3;
+			} else {
+				$$ = bOp->set_right_child(new IdNode($2));
+			}
+		}
 		| {$$ = nullptr;}
 		;
 
 expression:
-		NOT booleanExpression {auto unOp = new UnaryOperatorNode(TreeNode::NOT); $$ = unOp->set_child($2);}
+		NOT booleanExpression {auto unOp = new UnaryOperatorNode(TreeNode::NOT); $$ = unOp->set_left_child($2);}
 		| OP_PARENS expression CL_PARENS {$$ = $2;}
 		| TRUE boolRelOp2 {$$ = $2 != nullptr ? $2->set_left_child(new LiteralNode("BOOLEAN", true)) : dynamic_cast<TreeNode*>(new LiteralNode("BOOLEAN", true));}
 		| FALSE boolRelOp2 {$$ = $2 != nullptr ? $2->set_left_child(new LiteralNode("BOOLEAN", false)) : dynamic_cast<TreeNode*>(new LiteralNode("BOOLEAN", false));}
 		| mutableOrFunctionCall expOp {$$ = $2 != nullptr ? $2->set_left_child($1) : $1;}
 		| numLiteral numRelOp {$$ = $2 != nullptr ? $2->set_left_child($1) : (TreeNode*)$1;}
-		| unaryNumOp numLiteral numRelOp {$$ = $3 != nullptr ? $3->set_left_child($1->set_child($2)) : (TreeNode*)$1->set_child($2);}
+		| unaryNumOp numLiteral numRelOp {$$ = $3 != nullptr ? $3->set_left_child($1->set_left_child($2)) : (TreeNode*)$1->set_left_child($2);}
 		| STRINGLITERAL {$$ = new LiteralNode("CHAR", $1);} //TODO remove ""
 		| CHARLITERAL {$$ = new LiteralNode("CHAR", $1);} //TODO remove ''
 		;
@@ -382,7 +399,7 @@ numRelOp:
 		;
 
 booleanExpression:
-		NOT booleanExpression boolOp {auto unOp = new UnaryOperatorNode(TreeNode::NOT); unOp->set_child($2); $$ = $3 != nullptr ? $3->set_left_child(unOp) : dynamic_cast<TreeNode*>(unOp);}
+		NOT booleanExpression boolOp {auto unOp = new UnaryOperatorNode(TreeNode::NOT); unOp->set_left_child($2); $$ = $3 != nullptr ? $3->set_left_child(unOp) : dynamic_cast<TreeNode*>(unOp);}
 		| mutableOrFunctionCall boolRelOp {$$ = $2 != nullptr ? $2->set_left_child($1) : $1;}
 		| numLiteral numOp booleanExpression1 {$$ = $2 != nullptr ? $3->set_left_child($2->set_left_child($1)) : $3->set_left_child($1);} 
 		| OP_PARENS booleanExpression CL_PARENS boolOp {$$ = $4 != nullptr ? $4->set_left_child($2) : $2;}
@@ -396,14 +413,14 @@ booleanExpression1:
 		;
 
 boolOp:
-		AND booleanExpression {auto opNode = new OperatorNode(TreeNode::AND); $$ = opNode->set_right_child($2);}
-		| OR booleanExpression {auto opNode = new OperatorNode(TreeNode::OR); $$ = opNode->set_right_child($2);}
+		AND booleanExpression {auto opNode = new BinaryOperatorNode(TreeNode::AND); $$ = opNode->set_right_child($2);}
+		| OR booleanExpression {auto opNode = new BinaryOperatorNode(TreeNode::OR); $$ = opNode->set_right_child($2);}
 		| {$$ = nullptr;}
 		;
 
 boolOp1:
-		AND booleanExpression {auto opNode = new OperatorNode(TreeNode::AND); $$ = opNode->set_right_child($2);}
-		| OR booleanExpression {auto opNode = new OperatorNode(TreeNode::OR); $$ = opNode->set_right_child($2);}
+		AND booleanExpression {auto opNode = new BinaryOperatorNode(TreeNode::AND); $$ = opNode->set_right_child($2);}
+		| OR booleanExpression {auto opNode = new BinaryOperatorNode(TreeNode::OR); $$ = opNode->set_right_child($2);}
 		;
 
 boolRelOp:
@@ -424,39 +441,39 @@ boolRelOp2:
 		;
 
 relOp:
-		EQUAL {$$ = new OperatorNode(TreeNode::EQUAL);}
-		| NOT_EQUAL {$$ = new OperatorNode(TreeNode::NOT_EQUAL);}
+		EQUAL {$$ = new BinaryOperatorNode(TreeNode::EQUAL);}
+		| NOT_EQUAL {$$ = new BinaryOperatorNode(TreeNode::NOT_EQUAL);}
 		;
 
 relOpNum:
-		GREATER {$$ = new OperatorNode(TreeNode::GREATER);}
-		| GREATER_EQ {$$ = new OperatorNode(TreeNode::GREATER_EQ);}
-		| LESS {$$ = new OperatorNode(TreeNode::LESS);}
-		| LESS_EQ {$$ = new OperatorNode(TreeNode::LESS_EQ);}
+		GREATER {$$ = new BinaryOperatorNode(TreeNode::GREATER);}
+		| GREATER_EQ {$$ = new BinaryOperatorNode(TreeNode::GREATER_EQ);}
+		| LESS {$$ = new BinaryOperatorNode(TreeNode::LESS);}
+		| LESS_EQ {$$ = new BinaryOperatorNode(TreeNode::LESS_EQ);}
 		;
 
 numExpression:
-		unaryNumOp unaryNumExpression numOp {$1->set_child($2); $$ = $3 != nullptr ? (TreeNode*)$3->set_left_child($1) : $1;}
+		unaryNumOp unaryNumExpression numOp {$1->set_left_child($2); $$ = $3 != nullptr ? (TreeNode*)$3->set_left_child($1) : $1;}
 		| mutableOrFunctionCall numOp {$$ = $2 != nullptr ? $2->set_left_child($1) : $1;}
 		| OP_PARENS numExpression CL_PARENS numOp {$$ = $4 != nullptr ? $4->set_left_child($2) : $2;}
 		| numLiteral numOp {$$ = $2 != nullptr ? $2->set_left_child($1) : (TreeNode*)$1;}
 		;
 
 numOp:
-		PLUS numExpression {auto opNode = new OperatorNode(TreeNode::PLUS); $$ = opNode->set_right_child($2);}
-		| MINUS numExpression {auto opNode = new OperatorNode(TreeNode::MINUS); $$ = opNode->set_right_child($2);}
-		| TIMES numExpression {auto opNode = new OperatorNode(TreeNode::TIMES); $$ = opNode->set_right_child($2);}
-		| DIVIDE numExpression {auto opNode = new OperatorNode(TreeNode::DIVIDE); $$ = opNode->set_right_child($2);}
-		| MOD numExpression {auto opNode = new OperatorNode(TreeNode::MOD); $$ = opNode->set_right_child($2);}
+		PLUS numExpression {auto opNode = new BinaryOperatorNode(TreeNode::PLUS); $$ = opNode->set_right_child($2);}
+		| MINUS numExpression {auto opNode = new BinaryOperatorNode(TreeNode::MINUS); $$ = opNode->set_right_child($2);}
+		| TIMES numExpression {auto opNode = new BinaryOperatorNode(TreeNode::TIMES); $$ = opNode->set_right_child($2);}
+		| DIVIDE numExpression {auto opNode = new BinaryOperatorNode(TreeNode::DIVIDE); $$ = opNode->set_right_child($2);}
+		| MOD numExpression {auto opNode = new BinaryOperatorNode(TreeNode::MOD); $$ = opNode->set_right_child($2);}
 		| {$$ = nullptr;}
 		;
 
 numOp1:
-		PLUS numExpression {auto opNode = new OperatorNode(TreeNode::PLUS); $$ = opNode->set_right_child($2);}
-		| MINUS numExpression {auto opNode = new OperatorNode(TreeNode::MINUS); $$ = opNode->set_right_child($2);}
-		| TIMES numExpression {auto opNode = new OperatorNode(TreeNode::TIMES); $$ = opNode->set_right_child($2);}
-		| DIVIDE numExpression {auto opNode = new OperatorNode(TreeNode::DIVIDE); $$ = opNode->set_right_child($2);}
-		| MOD numExpression {auto opNode = new OperatorNode(TreeNode::MOD); $$ = opNode->set_right_child($2);}
+		PLUS numExpression {auto opNode = new BinaryOperatorNode(TreeNode::PLUS); $$ = opNode->set_right_child($2);}
+		| MINUS numExpression {auto opNode = new BinaryOperatorNode(TreeNode::MINUS); $$ = opNode->set_right_child($2);}
+		| TIMES numExpression {auto opNode = new BinaryOperatorNode(TreeNode::TIMES); $$ = opNode->set_right_child($2);}
+		| DIVIDE numExpression {auto opNode = new BinaryOperatorNode(TreeNode::DIVIDE); $$ = opNode->set_right_child($2);}
+		| MOD numExpression {auto opNode = new BinaryOperatorNode(TreeNode::MOD); $$ = opNode->set_right_child($2);}
 		;
 
 

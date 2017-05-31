@@ -421,3 +421,12 @@ __pycache__/
 # !tools/packages.config
 
 # End of https://www.gitignore.io/api/linux,c++,vim,c,flex,windows,visualstudio
+parser.output
+parser.tab.c
+parser.tab.h
+lex.yy.c
+parser
+.vscode/c_cpp_properties.json
+.vscode/settings.json
+.vscode/tasks.json
+.vscode/launch.json
