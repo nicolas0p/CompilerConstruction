@@ -20,7 +20,7 @@ ifstream open_file;
 
 int yywrap()
 {
-    return 1;
+	return 1;
 }
 
 %}
@@ -96,25 +96,22 @@ std::deque<std::pair<int, string>> error_list;
 %type <node> expressionStatement
 %type <rwNode> conditionalStatement
 %type <rwNode> conditionalStatement1
-%type <rwNode> conditionalStatement2
 %type <node> variableAttrOrDecla
 %type <opNode> variableAttribution
-%type <opNode> variableAttribution1
 %type <node> variableDeclaration
-%type <opNode> variableDeclaration1
 %type <node> expression
 %type <node> returnExpression
 %type <node> booleanExpression
-%type <opNode> booleanExpression1
 %type <node> numExpression
 %type <node> unaryNumExpression
 %type <opNode> boolRelOp
 %type <opNode> boolRelOp2
 %type <node> boolRelOp1
-%type <biOpNode> numRelOp
+%type <opNode> numRelOp
+%type <opNode> numRelOp1
 %type <opNode> expOp
-%type <opNode> boolOp
-%type <opNode> boolOp1
+%type <biOpNode> boolOp
+%type <biOpNode> boolOp1
 %type <biOpNode> numOp
 %type <biOpNode> numOp1
 %type <biOpNode> relOp
@@ -126,10 +123,8 @@ std::deque<std::pair<int, string>> error_list;
 %type <charp> returnType
 %type <charp> typeSpecifier
 %type <charp> arrayDef
-%type <charp> arrayDef1
 %type <litNode> numLiteral
 %type <node> mutableOrFunctionCall
-%type <opNode> mutableOrFunctionCall1
 %type <biOpNode> access
 %type <biOpNode> arrayAccess
 %type <biOpNode> structAccess
@@ -198,37 +193,52 @@ statement:
 		;
 
 variableDeclaration:
-		typeSpecifier ID variableDeclaration1 {
-            if(!symbol_table.typeExists($1)) {
-                //type doesnt exist
-                error_list.push_back(std::pair<int, std::string>(yylineno, "Type \"" + std::string($1) + "\" doesn't exist."));
-                $$ = nullptr;
-            } else {
-                SymbolTable::id_type id_type = symbol_table.find($2);
-                if(id_type == SymbolTable::VARIABLE || id_type == SymbolTable::FUNCTION) {
-                    //already exists or with same name as function
-                    error_list.push_back(std::pair<int, std::string>(yylineno, "A variable or function with the same name as  \"" + std::string($2) + "\" was already defined."));
-                    $$ = nullptr;
-                } else{ //everything is good
-                    $$ = $3 != nullptr ? $3->set_left_child(new VariableNode($1, $2)) : (TreeNode*)new VariableNode($1, $2);
-                }
-            }
-        }
-		;
-
-/*created to remove ambiguity*/
-variableDeclaration1:
-		ATTRIBUTION expression {auto op = new BinaryOperatorNode(TreeNode::Operator::ATTRIBUTION); $$ = op->set_right_child($2);}
-		| {$$ = nullptr;}
+		typeSpecifier ID ATTRIBUTION expression {
+			if(!symbol_table.typeExists($1)) {
+				//type doesnt exist
+				error_list.push_back(std::pair<int, std::string>(yylineno, "Type \"" + std::string($1) + "\" doesn't exist."));
+				$$ = nullptr;
+			} else {
+				SymbolTable::id_type id_type = symbol_table.find($2);
+				if(id_type == SymbolTable::VARIABLE || id_type == SymbolTable::FUNCTION) {
+					//already exists or with same name as function
+					error_list.push_back(std::pair<int, std::string>(yylineno, "A variable or function with the same name as  \"" + std::string($2) + "\" was already defined."));
+					$$ = nullptr;
+				} else{ //everything is good
+					auto op = new BinaryOperatorNode(TreeNode::Operator::ATTRIBUTION);
+					$$ = op->set_children(new VariableNode($1, $2), $4);
+				}
+			}
+		}
+		| typeSpecifier ID {
+			if(!symbol_table.typeExists($1)) {
+				//type doesnt exist
+				error_list.push_back(std::pair<int, std::string>(yylineno, "Type \"" + std::string($1) + "\" doesn't exist."));
+				$$ = nullptr;
+			} else {
+				SymbolTable::id_type id_type = symbol_table.find($2);
+				if(id_type == SymbolTable::VARIABLE || id_type == SymbolTable::FUNCTION) {
+					//already exists or with same name as function
+					error_list.push_back(std::pair<int, std::string>(yylineno, "A variable or function with the same name as  \"" + std::string($2) + "\" was already defined."));
+					$$ = nullptr;
+				} else{ //everything is good
+					$$ = new VariableNode($1, $2);
+				}
+			}
+		}
 		;
 
 variableAttribution:
-		ID variableAttribution1 {$2->set_left_child(new IdNode($1)); $$ = $2;}
-		;
-
-variableAttribution1:
-		ATTRIBUTION expression {auto op = new BinaryOperatorNode(TreeNode::Operator::ATTRIBUTION); $$ = op->set_right_child($2);}
-		| access ATTRIBUTION expression {auto op = new BinaryOperatorNode(TreeNode::Operator::ATTRIBUTION); $$ = op->set_children($1, $3);}
+		ID access ATTRIBUTION expression {
+			auto bOp = new BinaryOperatorNode(TreeNode::Operator::ATTRIBUTION);
+			bOp->set_children($2->set_left_child(new IdNode($1)), $4);
+			$$ = bOp;
+		}
+		| ID ATTRIBUTION expression {
+			auto bOp = new BinaryOperatorNode(TreeNode::Operator::ATTRIBUTION);
+			bOp->set_children(new IdNode($1), $3);
+			$$ = bOp;
+		}
 		;
 
 variableAttrOrDecla:
@@ -274,25 +284,25 @@ returnExpression:
 
 structDeclaration:
 		STRUCT ID OP_CURLY variableDeclarationNoValueList CL_CURLY SEMICOLON {
-            SymbolTable::id_type defined_type = symbol_table.find($2);
-            if (defined_type != SymbolTable::NONE) {
-                switch(defined_type) {
-                case SymbolTable::STRUCTURE:
-                    error_list.push_back(std::pair<int, std::string>(yylineno, "A struct with name \"" + std::string($2) + "\" was already defined."));
-                    break;
-                case SymbolTable::FUNCTION:
-                    error_list.push_back(std::pair<int, std::string>(yylineno, "A function with name \"" + std::string($2) + "\" was already defined."));
-                    break;
-                case SymbolTable::VARIABLE:
-                    error_list.push_back(std::pair<int, std::string>(yylineno, "A variable with name \"" + std::string($2) + "\" was already defined."));
-                    break;
-                }
-                $$ = nullptr;
-            }
-            else {
-                symbol_table.addStructure(structure(string($2), *$4));
-                $$ = new StructNode($2, *$4);}
-        }
+			SymbolTable::id_type defined_type = symbol_table.find($2);
+			if (defined_type != SymbolTable::NONE) {
+				switch(defined_type) {
+				case SymbolTable::STRUCTURE:
+					error_list.push_back(std::pair<int, std::string>(yylineno, "A struct with name \"" + std::string($2) + "\" was already defined."));
+					break;
+				case SymbolTable::FUNCTION:
+					error_list.push_back(std::pair<int, std::string>(yylineno, "A function with name \"" + std::string($2) + "\" was already defined."));
+					break;
+				case SymbolTable::VARIABLE:
+					error_list.push_back(std::pair<int, std::string>(yylineno, "A variable with name \"" + std::string($2) + "\" was already defined."));
+					break;
+				}
+				$$ = nullptr;
+			}
+			else {
+				symbol_table.addStructure(structure(string($2), *$4));
+				$$ = new StructNode($2, *$4);}
+		}
 		| STRUCT error SEMICOLON {print_error("Struct declaration: Before ';'");}
 		;
 
@@ -310,21 +320,15 @@ conditionalStatement:
 		;
 
 conditionalStatement1:
-		ELSE conditionalStatement2 {$$ = $2;}
+		ELSE conditionalStatement {
+			ReservedWordNode *elseNode = new ReservedWordNode(TreeNode::ELSE);
+			$$ = elseNode->insert_child($2);
+		}
+		| ELSE OP_CURLY statementList CL_CURLY {
+			ReservedWordNode *elseNode = new ReservedWordNode(TreeNode::ELSE);
+			$$ = elseNode->insert_child($3); 
+		}
 		| {$$ = nullptr;}
-		;
-
-conditionalStatement2:
-		conditionalStatement {
-			ReservedWordNode *elseNode = new ReservedWordNode(TreeNode::ELSE);
-			elseNode->insert_child($1);
-			$$ = elseNode;
-		}
-		| OP_CURLY statementList CL_CURLY {
-			ReservedWordNode *elseNode = new ReservedWordNode(TreeNode::ELSE);
-			elseNode->insert_child($2);
-			$$ = elseNode;
-		}
 		;
 
 expressionStatement:
@@ -345,24 +349,22 @@ typeSpecifier:
 		;
 
 arrayDef:
-		OP_SQUARE arrayDef1 {$$ = (std::string("[") + std::string($2)).c_str();}
+		OP_SQUARE INTLITERAL CL_SQUARE {$$ = (std::string("[") + std::to_string($2) + std::string("]")).c_str();}
+		| OP_SQUARE CL_SQUARE {$$ = (std::string("[") + std::string("]")).c_str();}
 		| {$$ = nullptr;}
 		;
 
-arrayDef1:
-		CL_SQUARE {$$ = "]";}
-		| INTLITERAL CL_SQUARE {$$ = (std::to_string($1) + std::string("]")).c_str();}
-		;
-
 mutableOrFunctionCall:
-		ID mutableOrFunctionCall1 {
-            current_id = std::pair<SymbolTable::id_type, string>(symbol_table.find($1), $1);
-            $$ = $2 != nullptr ? $2->set_left_child(new IdNode($1)) : dynamic_cast<TreeNode*>(new IdNode($1));}
-		;
-
-mutableOrFunctionCall1:
-		OP_PARENS args CL_PARENS access {auto cOp = new CallOperatorNode(TreeNode::CALL); $$ = $4 != nullptr ? $4->set_left_child(cOp->set_right_child($2)) : cOp->set_right_child($2);}
-		| access {$$ = $1;}
+		ID OP_PARENS args CL_PARENS access {
+			current_id = std::pair<SymbolTable::id_type, string>(symbol_table.find($1), $1);
+			auto cOp = new CallOperatorNode(TreeNode::CALL);
+			cOp->set_right_child($3)->set_left_child(new IdNode($1));
+			$$ = $5 != nullptr ? $5->set_left_child(cOp) : dynamic_cast<TreeNode*>(cOp);
+		}
+		| ID access {
+			current_id = std::pair<SymbolTable::id_type, string>(symbol_table.find($1), $1);
+			$$ = $2 != nullptr ? $2->set_left_child(new IdNode($1)) : dynamic_cast<TreeNode*>(new IdNode($1));
+		}
 		;
 
 access:
@@ -385,30 +387,30 @@ arrayAccess:
 
 structAccess:
 		PERIOD ID access {
-            if(current_id.first != SymbolTable::STRUCTURE) {
-                error_list.push_back(std::pair<int, std::string>(yylineno, "There was no struct with name \"" + std::string($2) + "\" declared."));
-                $$ = nullptr;
-            }
-            else {
-                structure* strut = symbol_table.findStructure(current_id.second);
-                current_id.second = strut->name();
-                if(strut != nullptr) {
-                    type* member_type = strut->find_member($2);
-                    if(member_type != nullptr) {
-                        error_list.push_back(std::pair<int, std::string>(yylineno, "Struct " + current_id.second + " has no member \"" + std::string($2) + "\" declared."));
-                        $$ = nullptr;
-                    }
-                } else {
-			        auto bOp = new BinaryOperatorNode(TreeNode::STRUCT);
-			        if ($3 != nullptr) {
-				        $3->set_left_child(bOp->set_right_child(new IdNode($2)));
-				        $$ = $3;
-		    	    } else {
-				        $$ = bOp->set_right_child(new IdNode($2));
-			        }
-                }
-		    }
-        }
+			if(current_id.first != SymbolTable::STRUCTURE) {
+				error_list.push_back(std::pair<int, std::string>(yylineno, "There was no struct with name \"" + std::string($2) + "\" declared."));
+				$$ = nullptr;
+			}
+			else {
+				structure* strut = symbol_table.findStructure(current_id.second);
+				current_id.second = strut->name();
+				if(strut != nullptr) {
+					type* member_type = strut->find_member($2);
+					if(member_type != nullptr) {
+						error_list.push_back(std::pair<int, std::string>(yylineno, "Struct " + current_id.second + " has no member \"" + std::string($2) + "\" declared."));
+						$$ = nullptr;
+					}
+				} else {
+					auto bOp = new BinaryOperatorNode(TreeNode::STRUCT);
+					if ($3 != nullptr) {
+						$3->set_left_child(bOp->set_right_child(new IdNode($2)));
+						$$ = $3;
+					} else {
+						$$ = bOp->set_right_child(new IdNode($2));
+					}
+				}
+			}
+		}
 		| {$$ = nullptr;}
 		;
 
@@ -440,28 +442,26 @@ expOp:
 
 numRelOp:
 		numOp1 {$$ = $1;}
-		| relOpNum numExpression {$$ = $1->set_right_child($2);}
-		| relOp expression {$$ = $1->set_right_child($2);}
+		| numRelOp1 {$$ = $1;}
 		| {$$ = nullptr;}
+		;
+
+numRelOp1:
+		relOpNum numExpression boolOp {$1->set_right_child($2); $$ = $3 != nullptr ? $3->set_left_child($1) : dynamic_cast<OperatorNode*>($1);}
+		| relOp expression boolOp {$1->set_right_child($2); $$ = $3 != nullptr ? $3->set_left_child($1) : dynamic_cast<OperatorNode*>($1);}
 		;
 
 booleanExpression:
 		NOT booleanExpression boolOp {auto unOp = new UnaryOperatorNode(TreeNode::NOT); unOp->set_left_child($2); $$ = $3 != nullptr ? $3->set_left_child(unOp) : dynamic_cast<TreeNode*>(unOp);}
 		| mutableOrFunctionCall boolRelOp {$$ = $2 != nullptr ? $2->set_left_child($1) : $1;}
-		| numLiteral numOp booleanExpression1 {$$ = $2 != nullptr ? $3->set_left_child($2->set_left_child($1)) : $3->set_left_child($1);} 
+		| numLiteral numOp numRelOp1 {$$ = $2 != nullptr ? $3->set_left_child($2->set_left_child($1)) : $3->set_left_child($1);}
 		| OP_PARENS booleanExpression CL_PARENS boolOp {$$ = $4 != nullptr ? $4->set_left_child($2) : $2;}
 		| TRUE boolOp {$$ = $2 != nullptr ? $2->set_left_child(new LiteralNode("BOOLEAN", true)) : (TreeNode*)new LiteralNode("BOOLEAN", true);}
 		| FALSE boolOp {$$ = $2 != nullptr ? $2->set_left_child(new LiteralNode("BOOLEAN", false)) : (TreeNode*)new LiteralNode("BOOLEAN", false);}
 		;
 
-booleanExpression1:
-		relOp expression {$$ = $1->set_right_child($2);}
-		| relOpNum numExpression {$$ = $1->set_right_child($2);}
-		;
-
 boolOp:
-		AND booleanExpression {auto opNode = new BinaryOperatorNode(TreeNode::AND); $$ = opNode->set_right_child($2);}
-		| OR booleanExpression {auto opNode = new BinaryOperatorNode(TreeNode::OR); $$ = opNode->set_right_child($2);}
+		boolOp1 {$$ = $1;}
 		| {$$ = nullptr;}
 		;
 
@@ -471,8 +471,7 @@ boolOp1:
 		;
 
 boolRelOp:
-		boolOp {$$ = $1;}
-		| relOp boolRelOp1 {$$ = $1->set_right_child($2);}
+		boolRelOp2 {$$ = $1;}
 		| relOpNum numExpression boolOp {$1->set_right_child($2); $$ = $3 != nullptr ? $3->set_left_child($1) : $1;}
 		;
 
@@ -507,11 +506,7 @@ numExpression:
 		;
 
 numOp:
-		PLUS numExpression {auto opNode = new BinaryOperatorNode(TreeNode::PLUS); $$ = opNode->set_right_child($2);}
-		| MINUS numExpression {auto opNode = new BinaryOperatorNode(TreeNode::MINUS); $$ = opNode->set_right_child($2);}
-		| TIMES numExpression {auto opNode = new BinaryOperatorNode(TreeNode::TIMES); $$ = opNode->set_right_child($2);}
-		| DIVIDE numExpression {auto opNode = new BinaryOperatorNode(TreeNode::DIVIDE); $$ = opNode->set_right_child($2);}
-		| MOD numExpression {auto opNode = new BinaryOperatorNode(TreeNode::MOD); $$ = opNode->set_right_child($2);}
+		numOp1 {$$ = $1;}
 		| {$$ = nullptr;}
 		;
 
@@ -564,7 +559,7 @@ yydebug = 1;
 	do {
 		yyparse();
 	} while (!feof(yyin));
-    for (std::pair<int, string> i : error_list) {
-        std::cout << "<Line " << std::to_string(i.first) << "> error: "  << i.second << std::endl;
-    }
+	for (std::pair<int, string> i : error_list) {
+		std::cout << "<Line " << std::to_string(i.first) << "> error: "  << i.second << std::endl;
+	}
 }
