@@ -13,7 +13,7 @@ SymbolTable::SymbolTable(ScopeType scope) : scope(scope)
 bool SymbolTable::addStructure(structure s)
 {
     if (tables.empty()) {
-        return structs.insert(std::make_pair(s.name, s)).second;
+        return structs.insert(std::make_pair(s._name, s)).second;
     } else {
         return tables.front().addStructure(s);
     }
@@ -97,6 +97,17 @@ variable* SymbolTable::findVariable(std::string name)
             }
         }
     }
+}
+
+SymbolTable::id_type SymbolTable::find(std::string name)
+{
+    if(this->findStructure(name))
+        return STRUCTURE;
+    if(this->findFunction(name))
+        return FUNCTION;
+    if(this->findVariable(name))
+        return VARIABLE;
+    return NONE;
 }
 
 bool SymbolTable::typeExists(type t)

@@ -9,6 +9,10 @@ struct arvore {
 	arvore b;
 };
 
+struct b{num a;};
+
+struct a{boolean[] a;};
+
 arvore lala() {;}
 
 num[] func()
@@ -26,7 +30,8 @@ num[] func()
 }
 
 num main() {
-	a.a[1].a = 1;
+	a a;
+    a.a[1].a = 1;
 	teste('i', a < b + 2 && true);
 	bool a = true;
 	num in = func()[5] + 4;

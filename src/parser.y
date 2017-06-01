@@ -35,10 +35,13 @@ extern SyntaxTree syntax_tree;
 %code top {
 #include "SyntaxTree.h"
 #include "SymbolTable.h"
+
+using std::string;
+
 SyntaxTree syntax_tree;
 SymbolTable symbol_table;
 
-using std::string;
+std::pair<SymbolTable::id_type, string> current_id;
 
 std::deque<std::pair<int, string>> error_list;
 }
@@ -141,7 +144,7 @@ declarations:
 		declarations functionDeclaration {syntax_tree.insert_node($2);}
 		| declarations structDeclaration {syntax_tree.insert_node($2);}
 		/* empty */
-		| 
+		|
 		;
 
 functionDeclaration:
@@ -195,7 +198,22 @@ statement:
 		;
 
 variableDeclaration:
-		typeSpecifier ID variableDeclaration1 {$$ = $3 != nullptr ? $3->set_left_child(new VariableNode($1, $2)) : (TreeNode*)new VariableNode($1, $2);}
+		typeSpecifier ID variableDeclaration1 {
+            if(!symbol_table.typeExists($1)) {
+                //type doesnt exist
+                error_list.push_back(std::pair<int, std::string>(yylineno, "Type \"" + std::string($1) + "\" doesn't exist."));
+                $$ = nullptr;
+            } else {
+                SymbolTable::id_type id_type = symbol_table.find($2);
+                if(id_type == SymbolTable::VARIABLE || id_type == SymbolTable::FUNCTION) {
+                    //already exists or with same name as function
+                    error_list.push_back(std::pair<int, std::string>(yylineno, "A variable or function with the same name as  \"" + std::string($2) + "\" was already defined."));
+                    $$ = nullptr;
+                } else{ //everything is good
+                    $$ = $3 != nullptr ? $3->set_left_child(new VariableNode($1, $2)) : (TreeNode*)new VariableNode($1, $2);
+                }
+            }
+        }
 		;
 
 /*created to remove ambiguity*/
@@ -256,13 +274,24 @@ returnExpression:
 
 structDeclaration:
 		STRUCT ID OP_CURLY variableDeclarationNoValueList CL_CURLY SEMICOLON {
-            if (symbol_table.findStructure($2) != nullptr) {
-                error_list.push_back(std::pair<int, std::string>(yylineno, "A struct with name \"" + std::string($2) + "\" was already defined"));
-            $$ = nullptr;
+            SymbolTable::id_type defined_type = symbol_table.find($2);
+            if (defined_type != SymbolTable::NONE) {
+                switch(defined_type) {
+                case SymbolTable::STRUCTURE:
+                    error_list.push_back(std::pair<int, std::string>(yylineno, "A struct with name \"" + std::string($2) + "\" was already defined."));
+                    break;
+                case SymbolTable::FUNCTION:
+                    error_list.push_back(std::pair<int, std::string>(yylineno, "A function with name \"" + std::string($2) + "\" was already defined."));
+                    break;
+                case SymbolTable::VARIABLE:
+                    error_list.push_back(std::pair<int, std::string>(yylineno, "A variable with name \"" + std::string($2) + "\" was already defined."));
+                    break;
+                }
+                $$ = nullptr;
             }
             else {
-            symbol_table.addStructure(structure(string($2), *$4));
-            $$ = new StructNode($2, *$4);}
+                symbol_table.addStructure(structure(string($2), *$4));
+                $$ = new StructNode($2, *$4);}
         }
 		| STRUCT error SEMICOLON {print_error("Struct declaration: Before ';'");}
 		;
@@ -276,7 +305,7 @@ conditionalStatement:
 		IF OP_PARENS booleanExpression CL_PARENS OP_CURLY statementList CL_CURLY conditionalStatement1 {
 			auto ifNode = new ReservedWordNode(TreeNode::IF);
 			ifNode->insert_child($3)->insert_child($6);
-			$$ = $8 != nullptr ? ifNode->insert_child($8) : ifNode; 
+			$$ = $8 != nullptr ? ifNode->insert_child($8) : ifNode;
 		}
 		;
 
@@ -289,12 +318,12 @@ conditionalStatement2:
 		conditionalStatement {
 			ReservedWordNode *elseNode = new ReservedWordNode(TreeNode::ELSE);
 			elseNode->insert_child($1);
-			$$ = elseNode; 
+			$$ = elseNode;
 		}
 		| OP_CURLY statementList CL_CURLY {
 			ReservedWordNode *elseNode = new ReservedWordNode(TreeNode::ELSE);
 			elseNode->insert_child($2);
-			$$ = elseNode; 
+			$$ = elseNode;
 		}
 		;
 
@@ -326,7 +355,9 @@ arrayDef1:
 		;
 
 mutableOrFunctionCall:
-		ID mutableOrFunctionCall1 {$$ = $2 != nullptr ? $2->set_left_child(new IdNode($1)) : dynamic_cast<TreeNode*>(new IdNode($1));}
+		ID mutableOrFunctionCall1 {
+            current_id = std::pair<SymbolTable::id_type, string>(symbol_table.find($1), $1);
+            $$ = $2 != nullptr ? $2->set_left_child(new IdNode($1)) : dynamic_cast<TreeNode*>(new IdNode($1));}
 		;
 
 mutableOrFunctionCall1:
@@ -354,14 +385,30 @@ arrayAccess:
 
 structAccess:
 		PERIOD ID access {
-			auto bOp = new BinaryOperatorNode(TreeNode::STRUCT);
-			if ($3 != nullptr) {
-				$3->set_left_child(bOp->set_right_child(new IdNode($2)));
-				$$ = $3;
-			} else {
-				$$ = bOp->set_right_child(new IdNode($2));
-			}
-		}
+            if(current_id.first != SymbolTable::STRUCTURE) {
+                error_list.push_back(std::pair<int, std::string>(yylineno, "There was no struct with name \"" + std::string($2) + "\" declared."));
+                $$ = nullptr;
+            }
+            else {
+                structure* strut = symbol_table.findStructure(current_id.second);
+                current_id.second = strut->name();
+                if(strut != nullptr) {
+                    type* member_type = strut->find_member($2);
+                    if(member_type != nullptr) {
+                        error_list.push_back(std::pair<int, std::string>(yylineno, "Struct " + current_id.second + " has no member \"" + std::string($2) + "\" declared."));
+                        $$ = nullptr;
+                    }
+                } else {
+			        auto bOp = new BinaryOperatorNode(TreeNode::STRUCT);
+			        if ($3 != nullptr) {
+				        $3->set_left_child(bOp->set_right_child(new IdNode($2)));
+				        $$ = $3;
+		    	    } else {
+				        $$ = bOp->set_right_child(new IdNode($2));
+			        }
+                }
+		    }
+        }
 		| {$$ = nullptr;}
 		;
 

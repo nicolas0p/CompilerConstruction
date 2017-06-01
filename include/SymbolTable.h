@@ -11,15 +11,27 @@
 typedef std::string type;
 
 struct structure {
-    std::string name;
-    std::deque<std::pair<std::string, type>> members;
+    std::string _name;
+    std::deque<std::pair<std::string, type>> _members;
 
-    structure(std::string nm, std::deque<const VariableNode*> mmbs) : name(nm)
+    structure(std::string nm, std::deque<const VariableNode*> mmbs) : _name(nm)
     {
         for(const VariableNode* i : mmbs) {
             std::pair<std::string, type> to_add(i->name(), i->type());
-            members.push_back(to_add);
+            _members.push_back(to_add);
         }
+    }
+
+    std::string name(){return _name;};
+
+    type* find_member(std::string name)
+    {
+        for(auto i : _members) {
+            if(i.second == name) {
+                return new type(i.first); //who deletes this?
+            }
+        }
+        return nullptr;
     }
 };
 
@@ -52,6 +64,10 @@ public:
     structure* findStructure(std::string name);
     function* findFunction(std::string name);
     variable* findVariable(std::string name);
+
+    enum id_type{STRUCTURE, FUNCTION, VARIABLE, NONE};
+
+    id_type find(std::string name); //returns if an ID is already defined as a struct, function or variable
 
     bool typeExists(type t);
 
