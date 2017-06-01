@@ -21,11 +21,12 @@ num[] func()
 	abcd = 13;
 	bool not = true;
 	num b = 1;
-	if(abcd < b + 1 && abcd != 12 || not == false){
+	if (abcd < b + 1 && abcd != 12 || not == false){
 		return abcd * 3;
-	}
-	else {
+	} else if (true || 1 <= a) {
 		return abcd % 5;
+	} else {
+		a[1] = b(a[2]);
 	}
 }
 
@@ -39,7 +40,8 @@ num main() {
 	char[] name = "grupo 6";
 	name[2] = 'b';
 	num flt = 1.563;
-	for(num i = 0 ; i < 6 ; i = i + 1) {
+	1 == 1 + 2 && true;
+	for(num i = 0 ; false || 4 > 2 + 1 && true ; i = i + 1) {
 		a = !a;
 		flt = flt + 1.01;
 	}
