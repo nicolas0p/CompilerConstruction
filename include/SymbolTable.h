@@ -44,6 +44,8 @@ struct function {
 struct variable {
     std::string name;
     type varType;
+
+	variable(std::string nm, type tp) : name(nm), varType(tp){}
 };
 
 enum ScopeType

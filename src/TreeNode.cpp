@@ -3,6 +3,11 @@
 TreeNode::TreeNode(){}
 TreeNode::~TreeNode(){}
 
+//Standard definition for all nodes. Will be overridden by the needed nodes
+std::string TreeNode::type() {
+	return "void";
+}
+
 VariableNode::VariableNode(const char* type, const char* name) {
 	this->_type = type;
 	this->_name = name;
@@ -34,7 +39,7 @@ OperatorNode::OperatorNode(){}
 OperatorNode::~OperatorNode(){}
 OperatorNode* OperatorNode::set_left_child(TreeNode* node) {
 	this->_left = node;
-	return this; 
+	return this;
 }
 bool OperatorNode::has_left() {
 	return this->_left != nullptr;
@@ -66,32 +71,32 @@ AccessOperatorNode::AccessOperatorNode(const AccessOperator& op) {
 AccessOperatorNode::~AccessOperatorNode(){}
 AccessOperatorNode* AccessOperatorNode::set_left_child(const IdNode* node) {
 	this->_left = node;
-	this->id = node->_name + this->id; 
-	return this; 
+	this->id = node->_name + this->id;
+	return this;
 }
 AccessOperatorNode* AccessOperatorNode::set_left_child(const AccessOperatorNode* node) {
 	this->_left = node;
-	this->id = node->id + this->id; 
-	return this; 
+	this->id = node->id + this->id;
+	return this;
 }
 AccessOperatorNode* AccessOperatorNode::set_right_child(const IdNode* node) {
 	this->_right = node;
-	this->id += "." + node->_name; 
-	return this; 
+	this->id += "." + node->_name;
+	return this;
 }
 AccessOperatorNode* AccessOperatorNode::set_right_child(const TreeNode* numExpression) {
 	this->_right = numExpression;
-	this->id += "[]"; 
-	return this; 
+	this->id += "[]";
+	return this;
 }
 AccessOperatorNode* AccessOperatorNode::set_right_child(const std::deque<const TreeNode*>* parameters) {
 	this->_parameters = parameters;
-	this->id += "()"; 
-	return this; 
+	this->id += "()";
+	return this;
 }
 
 CallOperatorNode::CallOperatorNode(const Operator& op) {
-	this->_operator = op;	
+	this->_operator = op;
 }
 CallOperatorNode::~CallOperatorNode(){}
 OperatorNode* CallOperatorNode::set_right_child(const std::deque<const TreeNode*>* parameters) {

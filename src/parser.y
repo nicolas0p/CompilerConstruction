@@ -203,9 +203,11 @@ variableDeclaration:
 				SymbolTable::id_type id_type = symbol_table.find($2);
 				if(id_type == SymbolTable::VARIABLE || id_type == SymbolTable::FUNCTION) {
 					//already exists or with same name as function
-					error_list.push_back(std::pair<int, std::string>(yylineno, "A variable or function with the same name as  \"" + std::string($2) + "\" was already defined."));
+					error_list.push_back(std::pair<int, std::string>(yylineno, "A variable or function with the same name as \"" + std::string($2) + "\" was already defined."));
 					$$ = nullptr;
 				} else{ //everything is good
+					variable var($2, $1);
+					symbol_table.addVariable(var);
 					auto op = new BinaryOperatorNode(TreeNode::Operator::ATTRIBUTION);
 					$$ = op->set_children(new VariableNode($1, $2), $4);
 				}
@@ -220,7 +222,7 @@ variableDeclaration:
 				SymbolTable::id_type id_type = symbol_table.find($2);
 				if(id_type == SymbolTable::VARIABLE || id_type == SymbolTable::FUNCTION) {
 					//already exists or with same name as function
-					error_list.push_back(std::pair<int, std::string>(yylineno, "A variable or function with the same name as  \"" + std::string($2) + "\" was already defined."));
+					error_list.push_back(std::pair<int, std::string>(yylineno, "A variable or function with the same name as \"" + std::string($2) + "\" was already defined."));
 					$$ = nullptr;
 				} else{ //everything is good
 					$$ = new VariableNode($1, $2);
@@ -231,14 +233,27 @@ variableDeclaration:
 
 variableAttribution:
 		ID access ATTRIBUTION expression {
+			//check if 'access' accesses valid members and if expression.type == ID access type
 			auto bOp = new BinaryOperatorNode(TreeNode::Operator::ATTRIBUTION);
 			bOp->set_children($2->set_left_child(new IdNode($1)), $4);
 			$$ = bOp;
 		}
 		| ID ATTRIBUTION expression {
-			auto bOp = new BinaryOperatorNode(TreeNode::Operator::ATTRIBUTION);
-			bOp->set_children(new IdNode($1), $3);
-			$$ = bOp;
+			auto var = symbol_table.findVariable($1);
+			if(var != nullptr) {
+				string type = var->varType;
+				if(type != $3->type()) {
+					error_list.push_back(std::pair<int, std::string>(yylineno, "Variable \"" + std::string($1) + "\" of type \"" + type + "\" cannot receive value of type \"" + $3->type() + "\"."));
+					$$ = nullptr;
+				} else { //everything is okay
+					auto bOp = new BinaryOperatorNode(TreeNode::Operator::ATTRIBUTION);
+					bOp->set_children(new IdNode($1), $3);
+					$$ = bOp;
+				}
+			} else {
+				error_list.push_back(std::pair<int, std::string>(yylineno, "Variable \"" + std::string($1) + "\" was not declared."));
+				$$ = nullptr;
+			}
 		}
 		;
 
@@ -561,6 +576,6 @@ yydebug = 1;
 		yyparse();
 	} while (!feof(yyin));
 	for (std::pair<int, string> i : error_list) {
-		std::cout << "<Line " << std::to_string(i.first) << "> error: "  << i.second << std::endl;
+		std::cout << "<Line " << std::to_string(i.first) << "> error: " << i.second << std::endl;
 	}
 }

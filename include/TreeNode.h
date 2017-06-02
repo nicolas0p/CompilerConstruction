@@ -25,6 +25,8 @@ class TreeNode
 		enum ReservedWord {
 			RETURN, FOR, WHILE, IF, ELSE, BREAK
 		};
+
+		std::string type();
 };
 
 class VariableNode : public TreeNode {
@@ -55,6 +57,8 @@ class LiteralNode : public TreeNode {
 		LiteralNode(const char* type, int value);
 		LiteralNode(const char* type, float value);
 		~LiteralNode();
+
+		std::string type();
 	private:
 		std::string _type;
 		std::string _s_value;
@@ -67,7 +71,7 @@ class IdNode : public TreeNode {
 	public:
 		IdNode(const char* name);
 		~IdNode();
-		
+
 		std::string _name;
 };
 
@@ -77,14 +81,18 @@ class OperatorNode : public TreeNode {
 		~OperatorNode();
 
 		OperatorNode* set_left_child(TreeNode* node);
+		std::string type();
+
 		bool has_left();
-		const TreeNode* _left;		
+		const TreeNode* _left;
 };
 
 class BinaryOperatorNode : public OperatorNode {
 	public:
 		BinaryOperatorNode(const Operator& op);
 		~BinaryOperatorNode();
+
+		std::string type();
 
 		BinaryOperatorNode* set_children(const TreeNode* node1, const TreeNode* node2);
 		BinaryOperatorNode* set_right_child(const TreeNode* node);
@@ -97,6 +105,8 @@ class UnaryOperatorNode : public OperatorNode {
 	public:
 		UnaryOperatorNode(const UnaryOperator& op);
 		~UnaryOperatorNode();
+
+		std::string type();
 
 	private:
 		UnaryOperator _operator;
@@ -112,6 +122,8 @@ class AccessOperatorNode : public OperatorNode {
 		AccessOperatorNode* set_right_child(const IdNode* node);
 		AccessOperatorNode* set_right_child(const TreeNode* numExpression);
 		AccessOperatorNode* set_right_child(const std::deque<const TreeNode*>* parameters);
+
+		std::string type();
 
 		std::string id;
 	private:
