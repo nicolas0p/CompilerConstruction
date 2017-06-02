@@ -48,7 +48,7 @@ BinaryOperatorNode* BinaryOperatorNode::set_right_child(const TreeNode* node) {
 	this->_right = node;
 	return this;
 }
-BinaryOperatorNode* BinaryOperatorNode::set_children(TreeNode* node1, const TreeNode* node2) {
+BinaryOperatorNode* BinaryOperatorNode::set_children(const TreeNode* node1, const TreeNode* node2) {
 	this->_left = node1;
 	this->_right = node2;
 	return this;
@@ -58,6 +58,37 @@ UnaryOperatorNode::UnaryOperatorNode(const UnaryOperator& op) {
 	this->_operator = op;
 }
 UnaryOperatorNode::~UnaryOperatorNode(){}
+
+AccessOperatorNode::AccessOperatorNode(const AccessOperator& op) {
+	this->_operator = op;
+	this->id = "";
+}
+AccessOperatorNode::~AccessOperatorNode(){}
+AccessOperatorNode* AccessOperatorNode::set_left_child(const IdNode* node) {
+	this->_left = node;
+	this->id = node->_name + this->id; 
+	return this; 
+}
+AccessOperatorNode* AccessOperatorNode::set_left_child(const AccessOperatorNode* node) {
+	this->_left = node;
+	this->id = node->id + this->id; 
+	return this; 
+}
+AccessOperatorNode* AccessOperatorNode::set_right_child(const IdNode* node) {
+	this->_right = node;
+	this->id += "." + node->_name; 
+	return this; 
+}
+AccessOperatorNode* AccessOperatorNode::set_right_child(const TreeNode* numExpression) {
+	this->_right = numExpression;
+	this->id += "[]"; 
+	return this; 
+}
+AccessOperatorNode* AccessOperatorNode::set_right_child(const std::deque<const TreeNode*>* parameters) {
+	this->_parameters = parameters;
+	this->id += "()"; 
+	return this; 
+}
 
 CallOperatorNode::CallOperatorNode(const Operator& op) {
 	this->_operator = op;	

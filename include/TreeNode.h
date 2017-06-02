@@ -11,7 +11,11 @@ class TreeNode
 		virtual ~TreeNode();
 
 		enum Operator {
-			PLUS, MINUS, TIMES, DIVIDE, MOD, AND, OR, ATTRIBUTION, EQUAL, NOT_EQUAL, GREATER, LESS, GREATER_EQ, LESS_EQ, STRUCT, ARRAY, CALL
+			PLUS, MINUS, TIMES, DIVIDE, MOD, AND, OR, ATTRIBUTION, EQUAL, NOT_EQUAL, GREATER, LESS, GREATER_EQ, LESS_EQ
+		};
+
+		enum AccessOperator {
+			STRUCT, ARRAY, CALL, ID
 		};
 
 		enum UnaryOperator {
@@ -59,6 +63,14 @@ class LiteralNode : public TreeNode {
 		float _f_value;
 };
 
+class IdNode : public TreeNode {
+	public:
+		IdNode(const char* name);
+		~IdNode();
+		
+		std::string _name;
+};
+
 class OperatorNode : public TreeNode {
 	public:
 		OperatorNode();
@@ -66,7 +78,7 @@ class OperatorNode : public TreeNode {
 
 		OperatorNode* set_left_child(TreeNode* node);
 		bool has_left();
-		TreeNode* _left;		
+		const TreeNode* _left;		
 };
 
 class BinaryOperatorNode : public OperatorNode {
@@ -74,7 +86,7 @@ class BinaryOperatorNode : public OperatorNode {
 		BinaryOperatorNode(const Operator& op);
 		~BinaryOperatorNode();
 
-		BinaryOperatorNode* set_children(TreeNode* node1, const TreeNode* node2);
+		BinaryOperatorNode* set_children(const TreeNode* node1, const TreeNode* node2);
 		BinaryOperatorNode* set_right_child(const TreeNode* node);
 	private:
 		Operator _operator;
@@ -88,6 +100,24 @@ class UnaryOperatorNode : public OperatorNode {
 
 	private:
 		UnaryOperator _operator;
+};
+
+class AccessOperatorNode : public OperatorNode {
+	public:
+		AccessOperatorNode(const AccessOperator& op);
+		~AccessOperatorNode();
+
+		AccessOperatorNode* set_left_child(const IdNode* node);
+		AccessOperatorNode* set_left_child(const AccessOperatorNode* node);
+		AccessOperatorNode* set_right_child(const IdNode* node);
+		AccessOperatorNode* set_right_child(const TreeNode* numExpression);
+		AccessOperatorNode* set_right_child(const std::deque<const TreeNode*>* parameters);
+
+		std::string id;
+	private:
+		AccessOperator _operator;
+		const TreeNode* _right;
+		const std::deque<const TreeNode*>* _parameters;
 };
 
 class CallOperatorNode : public OperatorNode {
@@ -120,14 +150,6 @@ class StructNode : public TreeNode {
 	private:
 		std::string _name;
 		std::deque<const VariableNode*> _variables;
-};
-
-class IdNode : public TreeNode {
-	public:
-		IdNode(const char* name);
-		~IdNode();
-	private:
-		std::string _name;
 };
 
 class ReservedWordNode : public TreeNode {

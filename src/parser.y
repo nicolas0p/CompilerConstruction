@@ -55,6 +55,7 @@ std::deque<std::pair<int, string>> error_list;
 	bool bval;
 	TreeNode* node;
 	OperatorNode* opNode;
+	AccessOperatorNode* acsOpNode;
 	BinaryOperatorNode* biOpNode;
 	UnaryOperatorNode* unOpNode;
 	ReservedWordNode* rwNode;
@@ -124,10 +125,10 @@ std::deque<std::pair<int, string>> error_list;
 %type <charp> typeSpecifier
 %type <charp> arrayDef
 %type <litNode> numLiteral
-%type <node> mutableOrFunctionCall
-%type <biOpNode> access
-%type <biOpNode> arrayAccess
-%type <biOpNode> structAccess
+%type <acsOpNode> mutableOrFunctionCall
+%type <acsOpNode> access
+%type <acsOpNode> arrayAccess
+%type <acsOpNode> structAccess
 
 
 %%
@@ -357,13 +358,13 @@ arrayDef:
 mutableOrFunctionCall:
 		ID OP_PARENS args CL_PARENS access {
 			current_id = std::pair<SymbolTable::id_type, string>(symbol_table.find($1), $1);
-			auto cOp = new CallOperatorNode(TreeNode::CALL);
+			auto cOp = new AccessOperatorNode(TreeNode::CALL);
 			cOp->set_right_child($3)->set_left_child(new IdNode($1));
-			$$ = $5 != nullptr ? $5->set_left_child(cOp) : dynamic_cast<TreeNode*>(cOp);
+			$$ = $5 != nullptr ? $5->set_left_child(cOp) : cOp;
 		}
 		| ID access {
 			current_id = std::pair<SymbolTable::id_type, string>(symbol_table.find($1), $1);
-			$$ = $2 != nullptr ? $2->set_left_child(new IdNode($1)) : dynamic_cast<TreeNode*>(new IdNode($1));
+			$$ = $2 != nullptr ? $2->set_left_child(new IdNode($1)) : (new AccessOperatorNode(TreeNode::ID))->set_left_child(new IdNode($1));
 		}
 		;
 
@@ -374,7 +375,7 @@ access:
 
 arrayAccess:
 		OP_SQUARE numExpression CL_SQUARE structAccess {
-			auto bOp = new BinaryOperatorNode(TreeNode::ARRAY);
+			auto bOp = new AccessOperatorNode(TreeNode::ARRAY);
 			bOp->set_right_child($2);
 			if ($4 != nullptr) {
 				$4->set_left_child(bOp);
@@ -401,7 +402,7 @@ structAccess:
 						$$ = nullptr;
 					}
 				} else {
-					auto bOp = new BinaryOperatorNode(TreeNode::STRUCT);
+					auto bOp = new AccessOperatorNode(TreeNode::STRUCT);
 					if ($3 != nullptr) {
 						$3->set_left_child(bOp->set_right_child(new IdNode($2)));
 						$$ = $3;
