@@ -44,6 +44,7 @@ void print_error(const char *str)
 %option yylineno
 %%
 [ \t\n]				;
+"//".*				;
 "true"				{yylval.bval = true; return TRUE;}
 "false"				{yylval.bval = false; return FALSE;}
 "for"				{yylval.charp = strdup(yytext);return FOR;}
