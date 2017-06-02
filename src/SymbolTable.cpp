@@ -112,12 +112,9 @@ SymbolTable::id_type SymbolTable::find(std::string name)
 
 bool SymbolTable::typeExists(type t)
 {
-    // falta pensar no array
-    if (t == "num" || t == "char" || t == "bool") {
-        return true;
-    }
+    t = t.substr(0, t.find_first_of('['));
 
-    return structs.count(t);
+    return t == "num" || t == "char" || t == "bool" || structs.count(t);
 }
 
 void SymbolTable::openBlockScope()
