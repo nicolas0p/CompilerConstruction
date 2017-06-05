@@ -36,9 +36,16 @@ struct structure {
 };
 
 struct function {
-    std::string name;
+    std::string _name;
     type returnType;
-    std::deque<std::pair<std::string, type>> parameters;
+    std::deque<std::pair<std::string, type>> _parameters;
+
+	function(std::string name, type ret, std::deque<const VariableNode*> params) : _name(name), returnType(ret) {
+		for(const VariableNode* i : params) {
+			_parameters.push_back(std::pair<std::string, type>(i->name(), i->type()));
+			//does this preserve the order of the parameters?
+		}
+	}
 };
 
 struct variable {
@@ -72,6 +79,7 @@ public:
     id_type find(std::string name); //returns if an ID is already defined as a struct, function or variable
 
     bool typeExists(type t);
+    bool returnTypeExists(type t);
 
     void openBlockScope();
     void openFunctionScope();

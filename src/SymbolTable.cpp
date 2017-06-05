@@ -21,7 +21,7 @@ bool SymbolTable::addStructure(structure s)
 
 bool SymbolTable::addFunction(function f)
 {
-    return funcs.insert(std::make_pair(f.name, f)).second;
+    return funcs.insert(std::make_pair(f._name, f)).second;
 }
 
 bool SymbolTable::addVariable(variable v)
@@ -50,7 +50,7 @@ structure* SymbolTable::findStructure(std::string name)
             if (struc) {
                 return struc;
             } else if (it->scope == ScopeType::blockScope) {
-                it++;
+				it++;
             } else {
                 std::map<std::string, structure>::iterator it = structs.find(name);
                 if (it != structs.end()) {
@@ -115,6 +115,11 @@ bool SymbolTable::typeExists(type t)
     t = t.substr(0, t.find_first_of('['));
 
     return t == "num" || t == "char" || t == "bool" || structs.count(t);
+}
+
+bool SymbolTable::returnTypeExists(type t)
+{
+	return typeExists(t) || t == "void";
 }
 
 void SymbolTable::openBlockScope()

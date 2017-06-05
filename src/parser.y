@@ -144,14 +144,32 @@ declarations:
 		;
 
 functionDeclaration:
-		returnType ID OP_PARENS parameters CL_PARENS OP_CURLY statementList CL_CURLY {$$ = new FunctionDeclarationNode($2, $1, *$4, $7);}
+		returnType ID OP_PARENS parameters CL_PARENS OP_CURLY statementList CL_CURLY {
+			//returnType must be valid. ID must be unique
+			if(!symbol_table.returnTypeExists($1)) {
+				error_list.push_back(std::pair<int, std::string>(yylineno, "Return type \"" + std::string($1) + "\" doesn't exist."));
+			} else { //type exists
+				auto tp = symbol_table.find($2);
+				if(tp == SymbolTable::VARIABLE || tp == SymbolTable::STRUCTURE) {
+				error_list.push_back(std::pair<int, std::string>(yylineno, "Identifier \"" + std::string($2) + "\" not unique, already used as variable or structure."));
+				} else { //everything is fine
+					symbol_table.addFunction(function($2, $1, *$4));
+				}
+			}
+			$$ = new FunctionDeclarationNode($2, $1, *$4, $7);
+			symbol_table.closeScope();
+		}
 		| error OP_CURLY statementList CL_CURLY {print_error("Function declaration: Before '{'");}
 		;
 
 parameters:
 		paramList {$$ = $1;} // {$$ = $1;} is the default action
 		/* empty */
-		| {$$ = new std::deque<const VariableNode*>();}
+		| {
+			$$ = new std::deque<const VariableNode*>();
+			symbol_table.openBlockScope();
+			//You can't define a function inside another, so no problem with block scope
+		}
 		;
 
 paramList:
@@ -301,6 +319,8 @@ returnExpression:
 structDeclaration:
 		STRUCT ID OP_CURLY variableDeclarationNoValueList CL_CURLY SEMICOLON {
 			SymbolTable::id_type defined_type = symbol_table.find($2);
+			#pragma GCC diagnostic push
+			#pragma GCC diagnostic ignored "-Wswitch"
 			if (defined_type != SymbolTable::NONE) {
 				switch(defined_type) {
 				case SymbolTable::STRUCTURE:
@@ -313,11 +333,11 @@ structDeclaration:
 					error_list.push_back(std::pair<int, std::string>(yylineno, "A variable with name \"" + std::string($2) + "\" was already defined."));
 					break;
 				}
-				$$ = nullptr;
 			}
-			else {
-				symbol_table.addStructure(structure(string($2), *$4));
-				$$ = new StructNode($2, *$4);}
+			#pragma GCC diagnostic pop
+			//ads scructure even if there are semantic errors, but no code will be generated in the end
+			symbol_table.addStructure(structure(string($2), *$4));
+			$$ = new StructNode($2, *$4);
 		}
 		| STRUCT error SEMICOLON {print_error("Struct declaration: Before ';'");}
 		;
@@ -372,13 +392,11 @@ arrayDef:
 
 mutableOrFunctionCall:
 		ID OP_PARENS args CL_PARENS access {
-			current_id = std::pair<SymbolTable::id_type, string>(symbol_table.find($1), $1);
 			auto cOp = new AccessOperatorNode(TreeNode::CALL);
 			cOp->set_right_child($3)->set_left_child(new IdNode($1));
 			$$ = $5 != nullptr ? $5->set_left_child(cOp) : cOp;
 		}
 		| ID access {
-			current_id = std::pair<SymbolTable::id_type, string>(symbol_table.find($1), $1);
 			$$ = $2 != nullptr ? $2->set_left_child(new IdNode($1)) : (new AccessOperatorNode(TreeNode::ID))->set_left_child(new IdNode($1));
 		}
 		;
@@ -403,28 +421,12 @@ arrayAccess:
 
 structAccess:
 		PERIOD ID access {
-			if(current_id.first != SymbolTable::STRUCTURE) {
-				error_list.push_back(std::pair<int, std::string>(yylineno, "There was no struct with name \"" + std::string($2) + "\" declared."));
-				$$ = nullptr;
-			}
-			else {
-				structure* strut = symbol_table.findStructure(current_id.second);
-				current_id.second = strut->name();
-				if(strut != nullptr) {
-					type* member_type = strut->find_member($2);
-					if(member_type != nullptr) {
-						error_list.push_back(std::pair<int, std::string>(yylineno, "Struct " + current_id.second + " has no member \"" + std::string($2) + "\" declared."));
-						$$ = nullptr;
-					}
-				} else {
-					auto bOp = new AccessOperatorNode(TreeNode::STRUCT);
-					if ($3 != nullptr) {
-						$3->set_left_child(bOp->set_right_child(new IdNode($2)));
-						$$ = $3;
-					} else {
-						$$ = bOp->set_right_child(new IdNode($2));
-					}
-				}
+			auto bOp = new AccessOperatorNode(TreeNode::STRUCT);
+			if ($3 != nullptr) {
+				$3->set_left_child(bOp->set_right_child(new IdNode($2)));
+				$$ = $3;
+			} else {
+				$$ = bOp->set_right_child(new IdNode($2));
 			}
 		}
 		| {$$ = nullptr;}
