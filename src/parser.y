@@ -167,7 +167,7 @@ parameters:
 		/* empty */
 		| {
 			$$ = new std::deque<const VariableNode*>();
-			symbol_table.openBlockScope();
+			symbol_table.openScope();
 			//You can't define a function inside another, so no problem with block scope
 		}
 		;
@@ -333,10 +333,11 @@ structDeclaration:
 					error_list.push_back(std::pair<int, std::string>(yylineno, "A variable with name \"" + std::string($2) + "\" was already defined."));
 					break;
 				}
+			} else {
+				symbol_table.addStructure(structure(string($2), *$4));
 			}
 			#pragma GCC diagnostic pop
 			//ads scructure even if there are semantic errors, but no code will be generated in the end
-			symbol_table.addStructure(structure(string($2), *$4));
 			$$ = new StructNode($2, *$4);
 		}
 		| STRUCT error SEMICOLON {print_error("Struct declaration: Before ';'");}

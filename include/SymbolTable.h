@@ -37,13 +37,13 @@ struct structure {
 };
 
 struct function {
-    std::string _name;
+    std::string name;
     type returnType;
     std::deque<std::pair<std::string, type>> parameters;
 
-    function(std::string name, type ret, std::deque<const VariableNode*> params) : _name(name), returnType(ret) {
+    function(std::string name, type ret, std::deque<const VariableNode*> params) : name(name), returnType(ret) {
             for(const VariableNode* i : params) {
-                    _parameters.push_back(std::pair<std::string, type>(i->name(), i->type()));
+                    parameters.push_back(std::pair<std::string, type>(i->name(), i->type()));
                     //does this preserve the order of the parameters?
             }
     }
@@ -53,7 +53,7 @@ struct variable {
     std::string name;
     type varType;
 
-    variable(std::string nm, type tp) : _name(nm), varType(tp){}
+    variable(std::string nm, type tp) : name(nm), varType(tp){}
 };
 
 class ScopeSymbolTable
