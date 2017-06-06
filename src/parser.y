@@ -174,7 +174,9 @@ parameters:
 
 paramList:
 		paramList COMMA typeSpecifier ID {$1->push_back(new VariableNode($3, $4)); $$ = $1;}
-		| typeSpecifier ID {auto list = new std::deque<const VariableNode*>({new VariableNode($1, $2)}); $$ = list;}
+		| typeSpecifier ID {
+			symbol_table.openScope();
+			auto list = new std::deque<const VariableNode*>({new VariableNode($1, $2)}); $$ = list;}
 		;
 
 main:
@@ -318,6 +320,7 @@ returnExpression:
 
 structDeclaration:
 		STRUCT ID OP_CURLY variableDeclarationNoValueList CL_CURLY SEMICOLON {
+			symbol_table.closeScope();
 			SymbolTable::id_type defined_type = symbol_table.find($2);
 			#pragma GCC diagnostic push
 			#pragma GCC diagnostic ignored "-Wswitch"
@@ -344,8 +347,23 @@ structDeclaration:
 		;
 
 variableDeclarationNoValueList:
-		variableDeclarationNoValueList typeSpecifier ID SEMICOLON {$1->push_back(new VariableNode($2, $3));}
-		| typeSpecifier ID SEMICOLON {auto list = new std::deque<const VariableNode*>({new VariableNode($1, $2)}); $$ = list;}
+		variableDeclarationNoValueList typeSpecifier ID SEMICOLON {
+			if(!symbol_table.typeExists($2)) {
+				error_list.push_back(std::pair<int, std::string>(yylineno, "Type \"" + std::string($2) + "\" does not name a type."));
+			} else { //everything is fine
+				$1->push_back(new VariableNode($2, $3));
+			}
+		}
+		| typeSpecifier ID SEMICOLON {
+			symbol_table.openScope();
+			if(!symbol_table.typeExists($1)) {
+				error_list.push_back(std::pair<int, std::string>(yylineno, "Type \"" + std::string($1) + "\" does not name a type."));
+				auto list = new std::deque<const VariableNode*>(); $$ = list;
+				
+			} else { //everything is fine
+				auto list = new std::deque<const VariableNode*>({new VariableNode($1, $2)}); $$ = list;
+			}
+		}
 		;
 
 conditionalStatement:

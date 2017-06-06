@@ -14,6 +14,8 @@ struct structure {
     std::string _name;
     std::deque<std::pair<std::string, type>> _members;
 
+    structure(){};
+    
     structure(std::string nm, std::deque<const VariableNode*> mmbs) : _name(nm)
     {
         for(const VariableNode* i : mmbs) {
@@ -92,7 +94,6 @@ public:
 
     bool typeExists(type t);
 
-    // whats the purpose of this function?
     bool returnTypeExists(type t);
 
     void openScope();
