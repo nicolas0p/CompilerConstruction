@@ -2,101 +2,70 @@
 
 SymbolTable::SymbolTable()
 {
-
-}
-
-SymbolTable::SymbolTable(ScopeType scope) : scope(scope)
-{
-
+    this->openScope();
 }
 
 bool SymbolTable::addStructure(structure s)
 {
-    if (tables.empty()) {
-        return structs.insert(std::make_pair(s._name, s)).second;
-    } else {
-        return tables.front().addStructure(s);
-    }
+    return scopeTables.front().addStructure(s);
 }
 
 bool SymbolTable::addFunction(function f)
 {
-    return funcs.insert(std::make_pair(f._name, f)).second;
+    return scopeTables.front().addFunction(f);
 }
 
 bool SymbolTable::addVariable(variable v)
 {
-    if (tables.empty()) {
-        return vars.insert(std::make_pair(v.name, v)).second;
-    } else {
-        return tables.front().addVariable(v);
-    }
+    return scopeTables.front().addVariable(v);
 }
 
 structure* SymbolTable::findStructure(std::string name)
 {
-    if (tables.empty()) {
-        std::map<std::string, structure>::iterator it = structs.find(name);
+    std::deque<ScopeSymbolTable>::iterator it = scopeTables.begin();
 
-        if (it != structs.end()) {
-            return &(it->second);
+    while (it != scopeTables.end()) {
+        structure* struc = it->findStructure(name);
+        if (struc) {
+            return struc;
         } else {
-            return nullptr;
-        }
-    } else {
-        std::deque<SymbolTable>::iterator it = tables.begin();
-        while (true) {
-            structure* struc = it->findStructure(name);
-            if (struc) {
-                return struc;
-            } else if (it->scope == ScopeType::blockScope) {
-				it++;
-            } else {
-                std::map<std::string, structure>::iterator it = structs.find(name);
-                if (it != structs.end()) {
-                    return &(it->second);
-                } else {
-                    return nullptr;
-                }
-            }
+            ++it;
         }
     }
+
+    return nullptr;
 }
 
 function* SymbolTable::findFunction(std::string name)
 {
-    std::map<std::string, function>::iterator it = funcs.find(name);
-    if (it != funcs.end()) {
-        return &(it->second);
-    } else {
-        return nullptr;
+    std::deque<ScopeSymbolTable>::iterator it = scopeTables.begin();
+
+    while (it != scopeTables.end()) {
+        function* func = it->findFunction(name);
+        if (func) {
+            return func;
+        } else {
+            ++it;
+        }
     }
+
+    return nullptr;
 }
 
 variable* SymbolTable::findVariable(std::string name)
 {
-    if (tables.empty()) {
-        std::map<std::string, variable>::iterator it = vars.find(name);
+    std::deque<ScopeSymbolTable>::iterator it = scopeTables.begin();
 
-        if (it != vars.end()) {
-            return &(it->second);
+    while (it != scopeTables.end()) {
+        variable* var = it->findVariable(name);
+        if (var) {
+            return var;
         } else {
-            return nullptr;
-        }
-    } else {
-        std::deque<SymbolTable>::iterator it = tables.begin();
-
-        while (true) {
-            variable* var = it->findVariable(name);
-            if (var) {
-                return var;
-            } else if (it->scope == ScopeType::blockScope) {
-                it++;
-            } else {
-                return nullptr;
-            }
+            ++it;
         }
     }
+
+    return nullptr;
 }
 
 SymbolTable::id_type SymbolTable::find(std::string name)
@@ -114,26 +83,68 @@ bool SymbolTable::typeExists(type t)
 {
     t = t.substr(0, t.find_first_of('['));
 
-    return t == "num" || t == "char" || t == "bool" || structs.count(t);
+    return t == "num" || t == "char" || t == "bool" || this->findStructure(t);
 }
 
 bool SymbolTable::returnTypeExists(type t)
 {
-	return typeExists(t) || t == "void";
+    return typeExists(t) || t == "void";
 }
 
-void SymbolTable::openBlockScope()
+void SymbolTable::openScope()
 {
-    tables.push_front(SymbolTable(ScopeType::blockScope));
-}
-
-void SymbolTable::openFunctionScope()
-{
-    tables.push_front(SymbolTable(ScopeType::functionScope));
+    scopeTables.push_front(ScopeSymbolTable());
 }
 
 void SymbolTable::closeScope()
 {
-    tables.pop_front();
+    scopeTables.pop_front();
+}
+
+bool ScopeSymbolTable::addStructure(structure s)
+{
+    return structs.insert(std::make_pair(s._name, s)).second;
+}
+
+bool ScopeSymbolTable::addFunction(function f)
+{
+    return funcs.insert(std::make_pair(f.name, f)).second;
+}
+
+bool ScopeSymbolTable::addVariable(variable v)
+{
+    return vars.insert(std::make_pair(v.name, v)).second;
+}
+
+structure* ScopeSymbolTable::findStructure(std::string name)
+{
+    std::map<std::string, structure>::iterator it = structs.find(name);
+
+    if (it != structs.end()) {
+        return &(it->second);
+    } else {
+        return nullptr;
+    }
+}
+
+function* ScopeSymbolTable::findFunction(std::string name)
+{
+    std::map<std::string, function>::iterator it = funcs.find(name);
+    if (it != funcs.end()) {
+        return &(it->second);
+    } else {
+        return nullptr;
+    }
+}
+
+variable* ScopeSymbolTable::findVariable(std::string name)
+{
+    std::map<std::string, variable>::iterator it = vars.find(name);
+
+    if (it != vars.end()) {
+        return &(it->second);
+    } else {
+        return nullptr;
+    }
 }
 
