@@ -83,7 +83,7 @@ bool SymbolTable::typeExists(type t)
 {
     t = t.substr(0, t.find_first_of('['));
 
-    return t == "num" || t == "char" || t == "bool" || this->findStructure(t);
+    return t == "num" || t == "char" || t == "boolean" || this->findStructure(t);
 }
 
 bool SymbolTable::returnTypeExists(type t)

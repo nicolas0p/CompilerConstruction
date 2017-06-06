@@ -146,6 +146,7 @@ declarations:
 functionDeclaration:
 		returnType ID OP_PARENS parameters CL_PARENS OP_CURLY statementList CL_CURLY {
 			//returnType must be valid. ID must be unique
+			symbol_table.closeScope();
 			if(!symbol_table.returnTypeExists($1)) {
 				error_list.push_back(std::pair<int, std::string>(yylineno, "Return type \"" + std::string($1) + "\" doesn't exist."));
 			} else { //type exists
@@ -157,7 +158,6 @@ functionDeclaration:
 				}
 			}
 			$$ = new FunctionDeclarationNode($2, $1, *$4, $7);
-			symbol_table.closeScope();
 		}
 		| error OP_CURLY statementList CL_CURLY {print_error("Function declaration: Before '{'");}
 		;
@@ -180,14 +180,34 @@ paramList:
 		;
 
 main:
-		NUM MAIN OP_PARENS mainParameters CL_PARENS OP_CURLY statementList CL_CURLY {$$ = new FunctionDeclarationNode($2, $1, *$4, $7);}
+		NUM MAIN OP_PARENS mainParameters CL_PARENS OP_CURLY statementList CL_CURLY {
+			$$ = new FunctionDeclarationNode($2, $1, *$4, $7);
+			symbol_table.closeScope();
+		}
 		| error OP_CURLY statementList CL_CURLY {print_error("Main declaration: Before '{'");}
 		;
 
 mainParameters:
-		NUM ID COMMA CHAR OP_SQUARE CL_SQUARE ID {$$ = new std::deque<const VariableNode*>({new VariableNode($1, $2), new VariableNode("char[]", $7)});}
+		NUM ID COMMA CHAR OP_SQUARE CL_SQUARE ID {
+			symbol_table.openScope();
+			SymbolTable::id_type id_type = symbol_table.find($2);
+			if(id_type == SymbolTable::VARIABLE || id_type == SymbolTable::FUNCTION) {
+				//already exists or with same name as function
+				error_list.push_back(std::pair<int, std::string>(yylineno, "A variable or function with the same name as \"" + std::string($2) + "\" was already defined."));
+			} else{ //everything is good with num
+				symbol_table.addVariable(variable($2, $1));
+			}
+			id_type = symbol_table.find($7);
+			if(id_type == SymbolTable::VARIABLE || id_type == SymbolTable::FUNCTION) {
+				//already exists or with same name as function
+				error_list.push_back(std::pair<int, std::string>(yylineno, "A variable or function with the same name as \"" + std::string($7) + "\" was already defined."));
+			} else{ //everything is good with num
+				symbol_table.addVariable(variable($7, "char[]"));
+			}
+			$$ = new std::deque<const VariableNode*>({new VariableNode($1, $2), new VariableNode("char[]", $7)});
+		}
 		/* empty */
-		| {$$ = new std::deque<const VariableNode*>();}
+		| {symbol_table.openScope(); $$ = new std::deque<const VariableNode*>();}
 		;
 
 statementList:
@@ -218,36 +238,33 @@ variableDeclaration:
 			if(!symbol_table.typeExists($1)) {
 				//type doesnt exist
 				error_list.push_back(std::pair<int, std::string>(yylineno, "Type \"" + std::string($1) + "\" doesn't exist."));
-				$$ = nullptr;
 			} else {
 				SymbolTable::id_type id_type = symbol_table.find($2);
 				if(id_type == SymbolTable::VARIABLE || id_type == SymbolTable::FUNCTION) {
 					//already exists or with same name as function
 					error_list.push_back(std::pair<int, std::string>(yylineno, "A variable or function with the same name as \"" + std::string($2) + "\" was already defined."));
-					$$ = nullptr;
 				} else{ //everything is good
 					variable var($2, $1);
 					symbol_table.addVariable(var);
-					auto op = new BinaryOperatorNode(TreeNode::Operator::ATTRIBUTION);
-					$$ = op->set_children(new VariableNode($1, $2), $4);
 				}
 			}
+			auto op = new BinaryOperatorNode(TreeNode::Operator::ATTRIBUTION);
+			$$ = op->set_children(new VariableNode($1, $2), $4);
 		}
 		| typeSpecifier ID {
 			if(!symbol_table.typeExists($1)) {
 				//type doesnt exist
 				error_list.push_back(std::pair<int, std::string>(yylineno, "Type \"" + std::string($1) + "\" doesn't exist."));
-				$$ = nullptr;
 			} else {
 				SymbolTable::id_type id_type = symbol_table.find($2);
 				if(id_type == SymbolTable::VARIABLE || id_type == SymbolTable::FUNCTION) {
 					//already exists or with same name as function
 					error_list.push_back(std::pair<int, std::string>(yylineno, "A variable or function with the same name as \"" + std::string($2) + "\" was already defined."));
-					$$ = nullptr;
 				} else{ //everything is good
-					$$ = new VariableNode($1, $2);
+					symbol_table.addVariable(variable($2, $1));
 				}
 			}
+			$$ = new VariableNode($1, $2);
 		}
 		;
 
@@ -264,16 +281,13 @@ variableAttribution:
 				string type = var->varType;
 				if(type != $3->type()) {
 					error_list.push_back(std::pair<int, std::string>(yylineno, "Variable \"" + std::string($1) + "\" of type \"" + type + "\" cannot receive value of type \"" + $3->type() + "\"."));
-					$$ = nullptr;
-				} else { //everything is okay
-					auto bOp = new BinaryOperatorNode(TreeNode::Operator::ATTRIBUTION);
-					bOp->set_children(new IdNode($1), $3);
-					$$ = bOp;
 				}
 			} else {
 				error_list.push_back(std::pair<int, std::string>(yylineno, "Variable \"" + std::string($1) + "\" was not declared."));
-				$$ = nullptr;
 			}
+			auto bOp = new BinaryOperatorNode(TreeNode::Operator::ATTRIBUTION);
+			bOp->set_children(new IdNode($1), $3);
+			$$ = bOp;
 		}
 		;
 
@@ -322,8 +336,6 @@ structDeclaration:
 		STRUCT ID OP_CURLY variableDeclarationNoValueList CL_CURLY SEMICOLON {
 			symbol_table.closeScope();
 			SymbolTable::id_type defined_type = symbol_table.find($2);
-			#pragma GCC diagnostic push
-			#pragma GCC diagnostic ignored "-Wswitch"
 			if (defined_type != SymbolTable::NONE) {
 				switch(defined_type) {
 				case SymbolTable::STRUCTURE:
@@ -335,11 +347,12 @@ structDeclaration:
 				case SymbolTable::VARIABLE:
 					error_list.push_back(std::pair<int, std::string>(yylineno, "A variable with name \"" + std::string($2) + "\" was already defined."));
 					break;
+				default:
+					break;
 				}
 			} else {
 				symbol_table.addStructure(structure(string($2), *$4));
 			}
-			#pragma GCC diagnostic pop
 			//ads scructure even if there are semantic errors, but no code will be generated in the end
 			$$ = new StructNode($2, *$4);
 		}
@@ -359,7 +372,6 @@ variableDeclarationNoValueList:
 			if(!symbol_table.typeExists($1)) {
 				error_list.push_back(std::pair<int, std::string>(yylineno, "Type \"" + std::string($1) + "\" does not name a type."));
 				auto list = new std::deque<const VariableNode*>(); $$ = list;
-				
 			} else { //everything is fine
 				auto list = new std::deque<const VariableNode*>({new VariableNode($1, $2)}); $$ = list;
 			}

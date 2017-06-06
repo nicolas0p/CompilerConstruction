@@ -19,7 +19,7 @@ num[] func()
 {
 	num abcd;
 	abcd = 13;
-	bool not = true;
+	boolean not = true;
 	num b = 1;
 	if (abcd < b + 1 && abcd != 12 || not == false){
 		return abcd * 3;
@@ -34,9 +34,9 @@ num main() {
 	a a;
     a.a[1].a = 1;
 	teste('i', a < b + 2 && true);
-	bool a = true;
+	boolean a = true;
 	num in = func()[5] + 4;
-	bool b = -6 > in;
+	boolean b = -6 > in;
 	char[] name = "grupo 6";
 	name[2] = 'b';
 	num flt = 1.563;
