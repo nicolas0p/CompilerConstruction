@@ -26,12 +26,11 @@ struct structure {
 
     std::string name(){return _name;}
 
-    // type eh std::string, por que retornar ponteiro? - arthur
-    type* find_member(std::string name)
+    type find_member(std::string name)
     {
         for(auto i : _members) {
             if(i.second == name) {
-                return new type(i.first); //who deletes this?
+                return type(i.first); //who deletes this?
             }
         }
         return nullptr;

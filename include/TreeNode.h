@@ -4,6 +4,8 @@
 #include <deque>
 #include <string>
 
+class SymbolTable;
+
 class TreeNode
 {
 	public:
@@ -26,7 +28,7 @@ class TreeNode
 			RETURN, FOR, WHILE, IF, ELSE, BREAK
 		};
 
-		std::string type();
+		std::string type(SymbolTable* symT) const;
 };
 
 class VariableNode : public TreeNode {
@@ -42,14 +44,6 @@ class VariableNode : public TreeNode {
 		std::string _name;
 };
 
-class TypeNode : public TreeNode {
-	public:
-		TypeNode(const char* type);
-		~TypeNode();
-	private:
-		std::string _type;
-};
-
 class LiteralNode : public TreeNode {
 	public:
 		LiteralNode(const char* type, const char* value);
@@ -58,7 +52,7 @@ class LiteralNode : public TreeNode {
 		LiteralNode(const char* type, float value);
 		~LiteralNode();
 
-		std::string type();
+		std::string type(SymbolTable* symT) const;
 	private:
 		std::string _type;
 		std::string _s_value;
@@ -72,6 +66,7 @@ class IdNode : public TreeNode {
 		IdNode(const char* name);
 		~IdNode();
 
+		std::string type(SymbolTable* symT) const;
 		std::string _name;
 };
 
@@ -80,10 +75,9 @@ class OperatorNode : public TreeNode {
 		OperatorNode();
 		~OperatorNode();
 
-		OperatorNode* set_left_child(TreeNode* node);
-		std::string type();
+		OperatorNode* set_left_child(const TreeNode* node);
+		std::string type(SymbolTable* symT) const;
 
-		bool has_left();
 		const TreeNode* _left;
 };
 
@@ -92,7 +86,7 @@ class BinaryOperatorNode : public OperatorNode {
 		BinaryOperatorNode(const Operator& op);
 		~BinaryOperatorNode();
 
-		std::string type();
+		std::string type(SymbolTable* symT) const;
 
 		BinaryOperatorNode* set_children(const TreeNode* node1, const TreeNode* node2);
 		BinaryOperatorNode* set_right_child(const TreeNode* node);
@@ -105,8 +99,9 @@ class UnaryOperatorNode : public OperatorNode {
 	public:
 		UnaryOperatorNode(const UnaryOperator& op);
 		~UnaryOperatorNode();
+		UnaryOperatorNode* set_left_child(const TreeNode* node);
 
-		std::string type();
+		std::string type(SymbolTable* symT) const;
 
 	private:
 		UnaryOperator _operator;
@@ -123,23 +118,13 @@ class AccessOperatorNode : public OperatorNode {
 		AccessOperatorNode* set_right_child(const TreeNode* numExpression);
 		AccessOperatorNode* set_right_child(const std::deque<const TreeNode*>* parameters);
 
-		std::string type();
-
-		std::string id;
+		std::string type(SymbolTable* symT) const;
 	private:
+		std::string _leftId;
+		std::string _rightId;
 		AccessOperator _operator;
+		bool _leftLeaf;
 		const TreeNode* _right;
-		const std::deque<const TreeNode*>* _parameters;
-};
-
-class CallOperatorNode : public OperatorNode {
-	public:
-		CallOperatorNode(const Operator& op);
-		~CallOperatorNode();
-
-		OperatorNode* set_right_child(const std::deque<const TreeNode*>* parameters);
-	private:
-		Operator _operator;
 		const std::deque<const TreeNode*>* _parameters;
 };
 

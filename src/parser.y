@@ -279,8 +279,8 @@ variableAttribution:
 			auto var = symbol_table.findVariable($1);
 			if(var != nullptr) {
 				string type = var->varType;
-				if(type != $3->type()) {
-					error_list.push_back(std::pair<int, std::string>(yylineno, "Variable \"" + std::string($1) + "\" of type \"" + type + "\" cannot receive value of type \"" + $3->type() + "\"."));
+				if(type != $3->type(&symbol_table)) {
+					error_list.push_back(std::pair<int, std::string>(yylineno, "Variable \"" + std::string($1) + "\" of type \"" + type + "\" cannot receive value of type \"" + $3->type(&symbol_table) + "\"."));
 				}
 			} else {
 				error_list.push_back(std::pair<int, std::string>(yylineno, "Variable \"" + std::string($1) + "\" was not declared."));
