@@ -400,7 +400,7 @@ conditionalStatement1:
 		}
 		| ELSE OP_CURLY statementList CL_CURLY {
 			ReservedWordNode *elseNode = new ReservedWordNode(TreeNode::ELSE);
-			$$ = elseNode->insert_child($3); 
+			$$ = elseNode->insert_child($3);
 		}
 		| {$$ = nullptr;}
 		;
@@ -429,9 +429,16 @@ arrayDef:
 		;
 
 mutableOrFunctionCall:
-		ID OP_PARENS args CL_PARENS access {
+		ID[name] OP_PARENS args[arguments] CL_PARENS access {
+			//check if ID is of function and if args are the correct type and order
+			function *func = symbol_table.findFunction($[name]);
+			if(func == nullptr) {
+				error_list.push_back(std::pair<int, std::string>(yylineno, "Function \"" + std::string($[name]) + "\" was not declared."));
+			} else if(!func->check_arguments(*$[arguments], &symbol_table)) {
+				error_list.push_back(std::pair<int, std::string>(yylineno, "Function \"" + std::string($[name]) + "\" call arguments do not match definition."));
+			}
 			auto cOp = new AccessOperatorNode(TreeNode::CALL);
-			cOp->set_right_child($3)->set_left_child(new IdNode($1));
+			cOp->set_right_child($[arguments])->set_left_child(new IdNode($[name]));
 			$$ = $5 != nullptr ? $5->set_left_child(cOp) : cOp;
 		}
 		| ID access {

@@ -48,6 +48,19 @@ struct function {
                     //does this preserve the order of the parameters?
             }
     }
+
+	bool check_arguments(std::deque<const TreeNode*> arguments, SymbolTable* symbol_table) {
+		if(parameters.size() != arguments.size()) {
+			return false;
+		}
+
+		for(size_t i = 0; i < parameters.size(); ++i) {
+			if(parameters.at(i).second != arguments.at(i)->type(symbol_table)) {
+				return false;
+			}
+		}
+		return true;
+	}
 };
 
 struct variable {
