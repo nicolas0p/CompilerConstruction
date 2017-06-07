@@ -15,7 +15,7 @@ struct structure {
     std::deque<std::pair<std::string, type>> _members;
 
     structure(){};
-    
+
     structure(std::string nm, std::deque<const VariableNode*> mmbs) : _name(nm)
     {
         for(const VariableNode* i : mmbs) {

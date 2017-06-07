@@ -41,9 +41,9 @@ using std::string;
 SyntaxTree syntax_tree;
 SymbolTable symbol_table;
 
-std::pair<SymbolTable::id_type, string> current_id;
-
 std::deque<std::pair<int, string>> error_list;
+
+type current_return_type;
 }
 
 %define parse.error verbose
@@ -144,20 +144,22 @@ declarations:
 		;
 
 functionDeclaration:
-		returnType ID OP_PARENS parameters CL_PARENS OP_CURLY statementList CL_CURLY {
+		returnType[ret] ID[name] OP_PARENS {symbol_table.openScope();} parameters[params] CL_PARENS OP_CURLY {current_return_type = $[ret];} statementList[statements] {symbol_table.closeScope();} CL_CURLY {
 			//returnType must be valid. ID must be unique
-			symbol_table.closeScope();
+			bool type_exists = true, valid_id = true;
 			if(!symbol_table.returnTypeExists($1)) {
-				error_list.push_back(std::pair<int, std::string>(yylineno, "Return type \"" + std::string($1) + "\" doesn't exist."));
-			} else { //type exists
-				auto tp = symbol_table.find($2);
-				if(tp == SymbolTable::VARIABLE || tp == SymbolTable::STRUCTURE) {
-				error_list.push_back(std::pair<int, std::string>(yylineno, "Identifier \"" + std::string($2) + "\" not unique, already used as variable or structure."));
-				} else { //everything is fine
-					symbol_table.addFunction(function($2, $1, *$4));
-				}
+				error_list.push_back(std::pair<int, std::string>(yylineno, "Return type \"" + std::string($1) + "\" is not valid."));
+				type_exists = false;
 			}
-			$$ = new FunctionDeclarationNode($2, $1, *$4, $7);
+			auto tp = symbol_table.find($2);
+			if(tp == SymbolTable::VARIABLE || tp == SymbolTable::STRUCTURE || tp == SymbolTable::FUNCTION) {
+				error_list.push_back(std::pair<int, std::string>(yylineno, "Identifier \"" + std::string($2) + "\" not unique, already used as function, variable or structure."));
+				valid_id = false;
+			}
+			if(type_exists && valid_id){ //everything is fine
+				symbol_table.addFunction(function($[name], $[ret], *$[params]));
+			}
+			$$ = new FunctionDeclarationNode($[name], $[ret], *$[params], $[statements]);
 		}
 		| error OP_CURLY statementList CL_CURLY {print_error("Function declaration: Before '{'");}
 		;
@@ -167,7 +169,7 @@ parameters:
 		/* empty */
 		| {
 			$$ = new std::deque<const VariableNode*>();
-			symbol_table.openScope();
+			//symbol_table.openScope();
 			//You can't define a function inside another, so no problem with block scope
 		}
 		;
@@ -175,21 +177,20 @@ parameters:
 paramList:
 		paramList COMMA typeSpecifier ID {$1->push_back(new VariableNode($3, $4)); $$ = $1;}
 		| typeSpecifier ID {
-			symbol_table.openScope();
+			//symbol_table.openScope();
 			auto list = new std::deque<const VariableNode*>({new VariableNode($1, $2)}); $$ = list;}
 		;
 
 main:
-		NUM MAIN OP_PARENS mainParameters CL_PARENS OP_CURLY statementList CL_CURLY {
-			$$ = new FunctionDeclarationNode($2, $1, *$4, $7);
-			symbol_table.closeScope();
+		NUM[ret] MAIN[name] OP_PARENS {symbol_table.openScope();} mainParameters[params] CL_PARENS OP_CURLY statementList[statements] {symbol_table.closeScope();} CL_CURLY {
+			$$ = new FunctionDeclarationNode($[name], $[ret], *$[params], $[statements]);
+			symbol_table.addFunction(function($[name], $[ret], *$[params]));
 		}
 		| error OP_CURLY statementList CL_CURLY {print_error("Main declaration: Before '{'");}
 		;
 
 mainParameters:
 		NUM ID COMMA CHAR OP_SQUARE CL_SQUARE ID {
-			symbol_table.openScope();
 			SymbolTable::id_type id_type = symbol_table.find($2);
 			if(id_type == SymbolTable::VARIABLE || id_type == SymbolTable::FUNCTION) {
 				//already exists or with same name as function
@@ -201,13 +202,13 @@ mainParameters:
 			if(id_type == SymbolTable::VARIABLE || id_type == SymbolTable::FUNCTION) {
 				//already exists or with same name as function
 				error_list.push_back(std::pair<int, std::string>(yylineno, "A variable or function with the same name as \"" + std::string($7) + "\" was already defined."));
-			} else{ //everything is good with num
+			} else{ //everything is good with char[]
 				symbol_table.addVariable(variable($7, "char[]"));
 			}
 			$$ = new std::deque<const VariableNode*>({new VariableNode($1, $2), new VariableNode("char[]", $7)});
 		}
 		/* empty */
-		| {symbol_table.openScope(); $$ = new std::deque<const VariableNode*>();}
+		| {$$ = new std::deque<const VariableNode*>();}
 		;
 
 statementList:
@@ -324,7 +325,13 @@ breakStatement:
 		;
 
 returnStatement:
-		RETURN returnExpression {auto ret = new ReservedWordNode(TreeNode::RETURN); $$ = $2 != nullptr ? ret->insert_child($2) : ret;}
+		RETURN returnExpression[exp] {
+			if($[exp]->type(&symbol_table) != current_return_type) {
+				error_list.push_back(std::pair<int, std::string>(yylineno, "Return type \"" + std::string($[exp]->type(&symbol_table)) + "\" does not match function's declaration \"" + current_return_type + "\"."));
+			}
+			auto ret = new ReservedWordNode(TreeNode::RETURN);
+			$$ = $2 != nullptr ? ret->insert_child($2) : ret;
+		}
 		;
 
 returnExpression:
