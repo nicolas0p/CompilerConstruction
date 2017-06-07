@@ -182,7 +182,7 @@ paramList:
 		;
 
 main:
-		NUM[ret] MAIN[name] OP_PARENS {symbol_table.openScope();} mainParameters[params] CL_PARENS OP_CURLY statementList[statements] {symbol_table.closeScope();} CL_CURLY {
+		NUM[ret] MAIN[name] OP_PARENS {symbol_table.openScope();} mainParameters[params] CL_PARENS OP_CURLY {current_return_type = $[ret];} statementList[statements] {symbol_table.closeScope();} CL_CURLY {
 			$$ = new FunctionDeclarationNode($[name], $[ret], *$[params], $[statements]);
 			symbol_table.addFunction(function($[name], $[ret], *$[params]));
 		}
