@@ -60,6 +60,13 @@ BinaryOperatorNode* BinaryOperatorNode::set_children(const TreeNode* node1, cons
 	this->_right = node2;
 	return this;
 }
+std::string BinaryOperatorNode::type(SymbolTable* symT) const {
+	if (_left->type(symT) == _right->type(symT)) {
+		return _left->type(symT);
+	}
+	error_list.push_back(std::pair<int, std::string>(yylineno, "Binary operation with two different types."));
+	return "error";
+}
 
 UnaryOperatorNode::UnaryOperatorNode(const UnaryOperator& op) {
 	this->_operator = op;
@@ -67,8 +74,10 @@ UnaryOperatorNode::UnaryOperatorNode(const UnaryOperator& op) {
 UnaryOperatorNode::~UnaryOperatorNode(){}
 UnaryOperatorNode* UnaryOperatorNode::set_left_child(const TreeNode* node) {
 	this->_left = node;
-	// this->type = node->type();
 	return this;
+}
+std::string UnaryOperatorNode::type(SymbolTable* symT) const {
+	return _left->type(symT);
 }
 
 AccessOperatorNode::AccessOperatorNode(const AccessOperator& op) {
