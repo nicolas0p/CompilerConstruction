@@ -1,6 +1,9 @@
 #include "../include/TreeNode.h"
 #include "../include/SymbolTable.h"
 
+extern std::deque<std::pair<int, std::string>> error_list;
+extern int yylineno;
+
 TreeNode::TreeNode(){}
 TreeNode::~TreeNode(){}
 
@@ -104,17 +107,24 @@ std::string AccessOperatorNode::type(SymbolTable* symT) const {
 		case TreeNode::ARRAY :
 			if (this->_leftLeaf) {
 				return symT->findVariable(this->_leftId)->varType;
+			} else {
+				auto type = this->_left->type(symT);
+				if (symT->find(type) == SymbolTable::VARIABLE /*&& symT->findVariable(type).isArray()*/) {
+					return symT->findStructure(type)->find_member(this->_rightId);
+				}
 			}
 			break;
 		case TreeNode::STRUCT :
 			if (this->_leftLeaf) {
-				return symT->findStructure(this->_leftId)->find_member(this->_rightId);
+				auto struct_type = symT->findVariable(this->_leftId)->varType;
+				return symT->findStructure(struct_type)->find_member(this->_rightId);
 			} else {
 				auto type = this->_left->type(symT);
 				if (symT->find(type) == SymbolTable::STRUCTURE) {
-					symT->findStructure(type)->find_member(this->_rightId);
+					return symT->findStructure(type)->find_member(this->_rightId);
 				} else {
-					return "errorList TODO";
+					error_list.push_back(std::pair<int, std::string>(yylineno, "Invalid access to a non Struct."));
+					return "error";
 				}
 			}
 			break;
@@ -122,11 +132,12 @@ std::string AccessOperatorNode::type(SymbolTable* symT) const {
 			if (this->_leftLeaf) {
 				return symT->findFunction(this->_leftId)->returnType;
 			} else {
-				return "errorList TODO";
+				error_list.push_back(std::pair<int, std::string>(yylineno, "Identifier \"" + this->_leftId + "\" is not a function."));
+				return "error";
 			}
 			break;
 	}
-	return "this->_type";
+	return "error";
 }
 
 FunctionDeclarationNode::FunctionDeclarationNode(const char* name, const char* return_type, const std::deque<const VariableNode*>& parameters, const std::deque<const TreeNode*>* statements) {
