@@ -271,9 +271,13 @@ variableDeclaration:
 
 variableAttribution:
 		ID access ATTRIBUTION expression {
-			//check if 'access' accesses valid members and if expression.type == ID access type
+			//check if expression.type == ID access type
 			auto bOp = new BinaryOperatorNode(TreeNode::Operator::ATTRIBUTION);
 			bOp->set_children($2->set_left_child(new IdNode($1)), $4);
+			//TODO we need to check if ID is a struct that has the member used in access in it! Is it going to be done in the type function?
+			if($4->type(&symbol_table) != $2->type(&symbol_table)) {
+				error_list.push_back(std::pair<int, std::string>(yylineno, "Expression type \"" + $4->type(&symbol_table) + "\" does not match variable type \"" + $2->type(&symbol_table) + "\"."));
+			}
 			$$ = bOp;
 		}
 		| ID ATTRIBUTION expression {
@@ -298,14 +302,16 @@ variableAttrOrDecla:
 		;
 
 loopStatement:
-		FOR OP_PARENS variableAttrOrDecla SEMICOLON booleanExpression SEMICOLON variableAttribution CL_PARENS OP_CURLY statementList CL_CURLY {
+		FOR OP_PARENS {symbol_table.openScope();} variableAttrOrDecla[variable] SEMICOLON booleanExpression[exp] SEMICOLON variableAttribution[attribution] CL_PARENS OP_CURLY statementList[statements] CL_CURLY {
+			symbol_table.closeScope();
 			auto forNode = new ReservedWordNode(TreeNode::FOR);
-			forNode->insert_child($3)->insert_child($5)->insert_child($7)->insert_child($10);
+			forNode->insert_child($[variable])->insert_child($[exp])->insert_child($[attribution])->insert_child($[statements]);
 			$$ = forNode;
 		}
-		| WHILE OP_PARENS booleanExpression CL_PARENS OP_CURLY statementList CL_CURLY {
+		| WHILE OP_PARENS booleanExpression[exp] CL_PARENS OP_CURLY {symbol_table.openScope();} statementList[statements] CL_CURLY {
+			symbol_table.closeScope();
 			auto whileNode = new ReservedWordNode(TreeNode::WHILE);
-			whileNode->insert_child($3)->insert_child($6);
+			whileNode->insert_child($[exp])->insert_child($[statements]);
 			$$ = whileNode;
 		}
 		;
@@ -321,7 +327,7 @@ argList:
 		;
 
 breakStatement:
-		BREAK SEMICOLON {$$ = new ReservedWordNode(TreeNode::BREAK);}
+		BREAK SEMICOLON {$$ = new ReservedWordNode(TreeNode::BREAK);/*how to check whether we are in a loop scope or not?*/}
 		;
 
 returnStatement:
@@ -386,10 +392,11 @@ variableDeclarationNoValueList:
 		;
 
 conditionalStatement:
-		IF OP_PARENS booleanExpression CL_PARENS OP_CURLY statementList CL_CURLY conditionalStatement1 {
+		IF OP_PARENS booleanExpression[boolExp] CL_PARENS OP_CURLY {symbol_table.openScope();} statementList[statements] CL_CURLY conditionalStatement1 {
+			symbol_table.closeScope();
 			auto ifNode = new ReservedWordNode(TreeNode::IF);
-			ifNode->insert_child($3)->insert_child($6);
-			$$ = $8 != nullptr ? ifNode->insert_child($8) : ifNode;
+			ifNode->insert_child($[boolExp])->insert_child($[statements]);
+			$$ = $9 != nullptr ? ifNode->insert_child($9) : ifNode;
 		}
 		;
 

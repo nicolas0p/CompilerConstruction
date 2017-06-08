@@ -4,6 +4,9 @@
 TreeNode::TreeNode(){}
 TreeNode::~TreeNode(){}
 
+extern std::deque<std::pair<int, std::string>> error_list;
+extern int yylineno;
+
 //Standard definition for all nodes. Will be overridden by the needed nodes
 std::string TreeNode::type(SymbolTable* symT) const {
 	return "void";
@@ -103,11 +106,24 @@ std::string AccessOperatorNode::type(SymbolTable* symT) const {
 			break;
 		case TreeNode::ARRAY :
 			if (this->_leftLeaf) {
+				if(!symT->isArray(this->_leftId)) {
+					error_list.push_back(std::pair<int, std::string>(yylineno, "Variable \"" + this->_leftId + "\" is not an array."));
+					return "error";
+				}
 				return symT->findVariable(this->_leftId)->varType;
 			}
 			break;
 		case TreeNode::STRUCT :
 			if (this->_leftLeaf) {
+				structure* struc = symT->findStructure(this->_leftId);
+				if(struc == nullptr) {
+					error_list.push_back(std::pair<int, std::string>(yylineno, "Variable \"" + this->_leftId + "\" is not a struct."));
+					return "error";
+				}
+				if(struc->find_member(this->_rightId) == "") {
+					error_list.push_back(std::pair<int, std::string>(yylineno, "\"" + this->_rightId + "\" is not a member of \"" + this->_leftId + "\"."));
+					return "error";
+				}
 				return symT->findStructure(this->_leftId)->find_member(this->_rightId);
 			} else {
 				auto type = this->_left->type(symT);

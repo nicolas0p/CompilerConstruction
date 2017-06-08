@@ -20,6 +20,15 @@ bool SymbolTable::addVariable(variable v)
     return scopeTables.front().addVariable(v);
 }
 
+bool SymbolTable::isArray(std::string name)
+{
+	variable *var = this->findVariable(name);
+	if(var == nullptr) {
+		return false;
+	}
+	return var->varType.find('[') && var->varType.find(']');
+}
+
 structure* SymbolTable::findStructure(std::string name)
 {
     std::deque<ScopeSymbolTable>::iterator it = scopeTables.begin();

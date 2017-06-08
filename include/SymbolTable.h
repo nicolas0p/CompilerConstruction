@@ -30,10 +30,10 @@ struct structure {
     {
         for(auto i : _members) {
             if(i.second == name) {
-                return type(i.first); //who deletes this?
+                return type(i.first);
             }
         }
-        return nullptr;
+        return "";
     }
 };
 
@@ -95,6 +95,8 @@ public:
     bool addStructure(structure s);
     bool addFunction(function f);
     bool addVariable(variable v);
+
+	bool isArray(std::string name);
 
     structure* findStructure(std::string name);
     function* findFunction(std::string name);
