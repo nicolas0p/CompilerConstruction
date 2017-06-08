@@ -38,6 +38,7 @@ class VariableNode : public TreeNode {
 
         std::string name() const {return std::string{_name};};
         std::string type() const {return std::string{_type};};
+		std::string type(SymbolTable* symT) const {return this->type();};
 
 	private:
 		std::string _type;
@@ -52,7 +53,8 @@ class LiteralNode : public TreeNode {
 		LiteralNode(const char* type, float value);
 		~LiteralNode();
 
-		std::string type(SymbolTable* symT) const;
+		std::string type() const {return std::string{_type};};
+		std::string type(SymbolTable* symT) const {return this->type();};
 	private:
 		std::string _type;
 		std::string _s_value;
@@ -102,7 +104,6 @@ class UnaryOperatorNode : public OperatorNode {
 		UnaryOperatorNode* set_left_child(const TreeNode* node);
 
 		std::string type(SymbolTable* symT) const;
-
 	private:
 		UnaryOperator _operator;
 };
