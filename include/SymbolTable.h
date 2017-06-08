@@ -29,8 +29,8 @@ struct structure {
     type find_member(std::string name)
     {
         for(auto i : _members) {
-            if(i.second == name) {
-                return type(i.first);
+            if(i.first == name) {
+                return i.second;
             }
         }
         return "";
