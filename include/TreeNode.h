@@ -28,7 +28,7 @@ class TreeNode
 			RETURN, FOR, WHILE, IF, ELSE, BREAK
 		};
 
-		std::string type() const;
+		virtual std::string type() const;
 };
 
 class VariableNode : public TreeNode {
@@ -86,7 +86,7 @@ class BinaryOperatorNode : public OperatorNode {
 		BinaryOperatorNode(const Operator& op);
 		~BinaryOperatorNode();
 
-		std::string type() const;
+		virtual std::string type() const;
 
 		BinaryOperatorNode* set_children(const TreeNode* node1, const TreeNode* node2);
 		BinaryOperatorNode* set_right_child(const TreeNode* node);

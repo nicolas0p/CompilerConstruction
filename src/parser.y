@@ -479,14 +479,14 @@ structAccess:
 expression:
 		NOT booleanExpression {auto unOp = new UnaryOperatorNode(TreeNode::NOT); $$ = unOp->set_left_child($2);}
 		| OP_PARENS expression CL_PARENS {$$ = $2;}
-		| TRUE boolRelOp2 {$$ = $2 != nullptr ? $2->set_left_child(new LiteralNode("BOOLEAN", true)) : dynamic_cast<TreeNode*>(new LiteralNode("BOOLEAN", true));}
-		| FALSE boolRelOp2 {$$ = $2 != nullptr ? $2->set_left_child(new LiteralNode("BOOLEAN", false)) : dynamic_cast<TreeNode*>(new LiteralNode("BOOLEAN", false));}
+		| TRUE boolRelOp2 {$$ = $2 != nullptr ? $2->set_left_child(new LiteralNode("boolean", true)) : dynamic_cast<TreeNode*>(new LiteralNode("boolean", true));}
+		| FALSE boolRelOp2 {$$ = $2 != nullptr ? $2->set_left_child(new LiteralNode("boolean", false)) : dynamic_cast<TreeNode*>(new LiteralNode("boolean", false));}
 		| mutableOrFunctionCall expOp {$$ = $2->set_left_child($1);}
 		| mutableOrFunctionCall {$1->type(); $$ = $1;}
 		| numLiteral numRelOp {$$ = $2 != nullptr ? $2->set_left_child($1) : (TreeNode*)$1;}
 		| unaryNumOp numLiteral numRelOp {$$ = $3 != nullptr ? $3->set_left_child($1->set_left_child($2)) : (TreeNode*)$1->set_left_child($2);}
-		| STRINGLITERAL {$$ = new LiteralNode("CHAR", $1);} //TODO remove ""
-		| CHARLITERAL {$$ = new LiteralNode("CHAR", $1);} //TODO remove ''
+		| STRINGLITERAL {$$ = new LiteralNode("char", $1);} //TODO remove ""
+		| CHARLITERAL {$$ = new LiteralNode("char", $1);} //TODO remove ''
 		;
 
 expOp:
@@ -518,8 +518,8 @@ booleanExpression:
 		| mutableOrFunctionCall boolRelOp {$$ = $2 != nullptr ? $2->set_left_child($1) : $1;}
 		| numLiteral numOp numRelOp1 {$$ = $2 != nullptr ? $3->set_left_child($2->set_left_child($1)) : $3->set_left_child($1);}
 		| OP_PARENS booleanExpression CL_PARENS boolOp {$$ = $4 != nullptr ? $4->set_left_child($2) : $2;}
-		| TRUE boolOp {$$ = $2 != nullptr ? $2->set_left_child(new LiteralNode("BOOLEAN", true)) : (TreeNode*)new LiteralNode("BOOLEAN", true);}
-		| FALSE boolOp {$$ = $2 != nullptr ? $2->set_left_child(new LiteralNode("BOOLEAN", false)) : (TreeNode*)new LiteralNode("BOOLEAN", false);}
+		| TRUE boolOp {$$ = $2 != nullptr ? $2->set_left_child(new LiteralNode("boolean", true)) : (TreeNode*)new LiteralNode("BOOLEAN", true);}
+		| FALSE boolOp {$$ = $2 != nullptr ? $2->set_left_child(new LiteralNode("boolean", false)) : (TreeNode*)new LiteralNode("BOOLEAN", false);}
 		;
 
 boolOp:
@@ -588,8 +588,8 @@ unaryNumExpression:
 		;
 
 numLiteral:
-		INTLITERAL {$$ = new LiteralNode("NUM", $1);}
-		| FLOATLITERAL {$$ = new LiteralNode("NUM", $1);}
+		INTLITERAL {$$ = new LiteralNode("num", $1);}
+		| FLOATLITERAL {$$ = new LiteralNode("num", $1);}
 		;
 
 unaryNumOp:

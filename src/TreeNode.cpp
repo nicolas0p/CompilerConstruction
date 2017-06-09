@@ -15,6 +15,10 @@ std::string TreeNode::type() const {
 	return "void";
 }
 
+std::string OperatorNode::type() const {
+	return "void";
+}
+
 VariableNode::VariableNode(const char* type, const char* name) {
 	this->_type = type;
 	this->_name = name;
@@ -184,7 +188,11 @@ IdNode::IdNode(const char* name) {
 	this->_name = name;
 }
 std::string IdNode::type() const {
-	return symbol_table.findVariable(this->_name)->varType;
+	auto var = symbol_table.findVariable(this->_name);
+	if(var == nullptr) {
+		return "error";
+	}
+	return var->varType;
 }
 IdNode::~IdNode(){}
 
