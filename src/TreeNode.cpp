@@ -7,9 +7,6 @@ extern int yylineno;
 TreeNode::TreeNode(){}
 TreeNode::~TreeNode(){}
 
-extern std::deque<std::pair<int, std::string>> error_list;
-extern int yylineno;
-
 //Standard definition for all nodes. Will be overridden by the needed nodes
 std::string TreeNode::type(SymbolTable* symT) const {
 	return "void";
@@ -130,29 +127,22 @@ std::string AccessOperatorNode::type(SymbolTable* symT) const {
 				}
 			}
 			break;
-		case TreeNode::STRUCT :
-			if (this->_leftLeaf) {
-				auto struct_type = symT->findVariable(this->_leftId)->varType;
-				structure* struc = symT->findStructure(struct_type);
-				if(struc == nullptr) {
-					error_list.push_back(std::pair<int, std::string>(yylineno, "Variable \"" + this->_leftId + "\" is not a struct."));
-					return "error";
-				}
-				if(struc->find_member(this->_rightId) == "") {
-					error_list.push_back(std::pair<int, std::string>(yylineno, "\"" + this->_rightId + "\" is not a member of \"" + struct_type + "\"."));
-					return "error";
-				}
-				return symT->findStructure(struct_type)->find_member(this->_rightId);
-			} else {
-				auto type = this->_left->type(symT);
-				if (symT->find(type) == SymbolTable::STRUCTURE) {
-					return symT->findStructure(type)->find_member(this->_rightId);
-				} else {
-					error_list.push_back(std::pair<int, std::string>(yylineno, "Invalid access to a non Struct."));
-					return "error";
-				}
+		case TreeNode::STRUCT : {
+			auto struct_type = this->_leftLeaf ? symT->findVariable(this->_leftId)->varType : this->_left->type(symT);
+			auto struc = symT->findStructure(struct_type);
+			if(struc == nullptr) {
+				auto erromsg = this->_leftLeaf ? "Variable \"" + this->_leftId + "\" is not a struct." : "Invalid access to a non Struct.";
+				error_list.push_back(std::pair<int, std::string>(yylineno, erromsg));
+				return "error";
 			}
+			auto typeMember = struc->find_member(this->_rightId);
+			if(typeMember == "") {
+				error_list.push_back(std::pair<int, std::string>(yylineno, "\"" + this->_rightId + "\" is not a member of \"" + struct_type + "\"."));
+				return "error";
+			}
+			return typeMember;
 			break;
+		}
 		case TreeNode::CALL :
 			if (this->_leftLeaf) {
 				return symT->findFunction(this->_leftId)->returnType;

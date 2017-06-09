@@ -426,7 +426,7 @@ typeSpecifier:
 		NUM arrayDef {$$ = ($2 != nullptr ? (std::string($1) + std::string($2)).c_str() : std::string($1).c_str());}
 		| BOOLEAN arrayDef {$$ = ($2 != nullptr ? (std::string($1) + std::string($2)).c_str() : std::string($1).c_str());}
 		| CHAR arrayDef {$$ = ($2 != nullptr ? (std::string($1) + std::string($2)).c_str() : std::string($1).c_str());}
-		| ID {$$ = $1;}
+		| ID arrayDef {$$ = $2 != nullptr ? (std::string($1) + std::string($2)).c_str() : std::string($1).c_str();}
 		;
 
 arrayDef:
@@ -489,7 +489,8 @@ expression:
 		| OP_PARENS expression CL_PARENS {$$ = $2;}
 		| TRUE boolRelOp2 {$$ = $2 != nullptr ? $2->set_left_child(new LiteralNode("BOOLEAN", true)) : dynamic_cast<TreeNode*>(new LiteralNode("BOOLEAN", true));}
 		| FALSE boolRelOp2 {$$ = $2 != nullptr ? $2->set_left_child(new LiteralNode("BOOLEAN", false)) : dynamic_cast<TreeNode*>(new LiteralNode("BOOLEAN", false));}
-		| mutableOrFunctionCall expOp {$$ = $2 != nullptr ? $2->set_left_child($1) : $1;}
+		| mutableOrFunctionCall expOp {$$ = $2->set_left_child($1);}
+		| mutableOrFunctionCall {$1->type(&symbol_table); $$ = $1;}
 		| numLiteral numRelOp {$$ = $2 != nullptr ? $2->set_left_child($1) : (TreeNode*)$1;}
 		| unaryNumOp numLiteral numRelOp {$$ = $3 != nullptr ? $3->set_left_child($1->set_left_child($2)) : (TreeNode*)$1->set_left_child($2);}
 		| STRINGLITERAL {$$ = new LiteralNode("CHAR", $1);} //TODO remove ""
@@ -507,7 +508,6 @@ expOp:
 			$1->set_right_child($2);
 			$$ = $3 != nullptr ? $3->set_left_child($1) : $1;
 		}
-		| {$$ = nullptr;}
 		;
 
 numRelOp:
