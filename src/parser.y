@@ -94,14 +94,12 @@ type current_return_type;
 %type <rwNode> loopStatement
 %type <rwNode> breakStatement
 %type <rwNode> returnStatement
-%type <node> expressionStatement
 %type <rwNode> conditionalStatement
 %type <rwNode> conditionalStatement1
 %type <node> variableAttrOrDecla
 %type <opNode> variableAttribution
 %type <node> variableDeclaration
 %type <node> expression
-%type <node> returnExpression
 %type <node> booleanExpression
 %type <node> numExpression
 %type <node> unaryNumExpression
@@ -227,10 +225,11 @@ statement:
 		| variableAttribution SEMICOLON {$$ = $1;}
 		| loopStatement {$$ = $1;}
 		| breakStatement {$$ = $1;}
-		| returnStatement {$$ = $1;}
+		| returnStatement SEMICOLON {$$ = $1;}
 		| structDeclaration {$$ = $1;}
 		| conditionalStatement {$$ = $1;}
-		| expressionStatement {$$ = $1;}
+		| expression SEMICOLON {$$ = $1;}
+		| SEMICOLON {$$ = nullptr;}
 		| error SEMICOLON {print_error("statement error");}
 		;
 
@@ -275,8 +274,8 @@ variableAttribution:
 			auto bOp = new BinaryOperatorNode(TreeNode::Operator::ATTRIBUTION);
 			bOp->set_children($2->set_left_child(new IdNode($1)), $4);
 			//TODO we need to check if ID is a struct that has the member used in access in it! Is it going to be done in the type function?
-			if($4->type(&symbol_table) != $2->type(&symbol_table)) {
-				error_list.push_back(std::pair<int, std::string>(yylineno, "Expression type \"" + $4->type(&symbol_table) + "\" does not match variable type \"" + $2->type(&symbol_table) + "\"."));
+			if($4->type() != $2->type()) {
+				error_list.push_back(std::pair<int, std::string>(yylineno, "Expression type \"" + $4->type() + "\" does not match variable type \"" + $2->type() + "\"."));
 			}
 			$$ = bOp;
 		}
@@ -284,8 +283,8 @@ variableAttribution:
 			auto var = symbol_table.findVariable($1);
 			if(var != nullptr) {
 				string type = var->varType;
-				if(type != $3->type(&symbol_table)) {
-					error_list.push_back(std::pair<int, std::string>(yylineno, "Variable \"" + std::string($1) + "\" of type \"" + type + "\" cannot receive value of type \"" + $3->type(&symbol_table) + "\"."));
+				if(type != $3->type()) {
+					error_list.push_back(std::pair<int, std::string>(yylineno, "Variable \"" + std::string($1) + "\" of type \"" + type + "\" cannot receive value of type \"" + $3->type() + "\"."));
 				}
 			} else {
 				error_list.push_back(std::pair<int, std::string>(yylineno, "Variable \"" + std::string($1) + "\" was not declared."));
@@ -331,18 +330,13 @@ breakStatement:
 		;
 
 returnStatement:
-		RETURN returnExpression[exp] {
-			if($[exp]->type(&symbol_table) != current_return_type) {
-				error_list.push_back(std::pair<int, std::string>(yylineno, "Return type \"" + std::string($[exp]->type(&symbol_table)) + "\" does not match function's declaration \"" + current_return_type + "\"."));
+		RETURN expression[exp] {
+			if($[exp]->type() != current_return_type) {
+				error_list.push_back(std::pair<int, std::string>(yylineno, "Return type \"" + std::string($[exp]->type()) + "\" does not match function's declaration \"" + current_return_type + "\"."));
 			}
-			auto ret = new ReservedWordNode(TreeNode::RETURN);
-			$$ = $2 != nullptr ? ret->insert_child($2) : ret;
+			$$ = (new ReservedWordNode(TreeNode::RETURN))->insert_child($2);
 		}
-		;
-
-returnExpression:
-		SEMICOLON {$$ = nullptr;}
-		| expression SEMICOLON {$$ = $1;}
+		| RETURN {$$ = new ReservedWordNode(TreeNode::RETURN);}
 		;
 
 structDeclaration:
@@ -410,11 +404,6 @@ conditionalStatement1:
 			$$ = elseNode->insert_child($3);
 		}
 		| {$$ = nullptr;}
-		;
-
-expressionStatement:
-		expression SEMICOLON {$$ = $1;}
-		| SEMICOLON {$$ = nullptr;}
 		;
 
 returnType:
@@ -490,7 +479,7 @@ expression:
 		| TRUE boolRelOp2 {$$ = $2 != nullptr ? $2->set_left_child(new LiteralNode("BOOLEAN", true)) : dynamic_cast<TreeNode*>(new LiteralNode("BOOLEAN", true));}
 		| FALSE boolRelOp2 {$$ = $2 != nullptr ? $2->set_left_child(new LiteralNode("BOOLEAN", false)) : dynamic_cast<TreeNode*>(new LiteralNode("BOOLEAN", false));}
 		| mutableOrFunctionCall expOp {$$ = $2->set_left_child($1);}
-		| mutableOrFunctionCall {$1->type(&symbol_table); $$ = $1;}
+		| mutableOrFunctionCall {$1->type(); $$ = $1;}
 		| numLiteral numRelOp {$$ = $2 != nullptr ? $2->set_left_child($1) : (TreeNode*)$1;}
 		| unaryNumOp numLiteral numRelOp {$$ = $3 != nullptr ? $3->set_left_child($1->set_left_child($2)) : (TreeNode*)$1->set_left_child($2);}
 		| STRINGLITERAL {$$ = new LiteralNode("CHAR", $1);} //TODO remove ""

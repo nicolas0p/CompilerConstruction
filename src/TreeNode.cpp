@@ -1,14 +1,17 @@
 #include "../include/TreeNode.h"
 #include "../include/SymbolTable.h"
+#include <iostream>
+
 
 extern std::deque<std::pair<int, std::string>> error_list;
 extern int yylineno;
+extern SymbolTable symbol_table;
 
 TreeNode::TreeNode(){}
 TreeNode::~TreeNode(){}
 
 //Standard definition for all nodes. Will be overridden by the needed nodes
-std::string TreeNode::type(SymbolTable* symT) const {
+std::string TreeNode::type() const {
 	return "void";
 }
 
@@ -60,9 +63,9 @@ BinaryOperatorNode* BinaryOperatorNode::set_children(const TreeNode* node1, cons
 	this->_right = node2;
 	return this;
 }
-std::string BinaryOperatorNode::type(SymbolTable* symT) const {
-	if (_left->type(symT) == _right->type(symT)) {
-		return _left->type(symT);
+std::string BinaryOperatorNode::type() const {
+	if (_left->type() == _right->type()) {
+		return _left->type();
 	}
 	error_list.push_back(std::pair<int, std::string>(yylineno, "Binary operation with two different types."));
 	return "error";
@@ -76,8 +79,8 @@ UnaryOperatorNode* UnaryOperatorNode::set_left_child(const TreeNode* node) {
 	this->_left = node;
 	return this;
 }
-std::string UnaryOperatorNode::type(SymbolTable* symT) const {
-	return _left->type(symT);
+std::string UnaryOperatorNode::type() const {
+	return _left->type();
 }
 
 AccessOperatorNode::AccessOperatorNode(const AccessOperator& op) {
@@ -89,10 +92,12 @@ AccessOperatorNode* AccessOperatorNode::set_left_child(const IdNode* node) {
 	this->_left = node;
 	this->_leftLeaf = true;
 	this->_leftId = node->_name;
+	this->check_type();
 	return this;
 }
 AccessOperatorNode* AccessOperatorNode::set_left_child(const AccessOperatorNode* node) {
 	this->_left = node;
+	this->check_type();
 	return this;
 }
 AccessOperatorNode* AccessOperatorNode::set_right_child(const IdNode* node) {
@@ -108,51 +113,58 @@ AccessOperatorNode* AccessOperatorNode::set_right_child(const std::deque<const T
 	this->_parameters = parameters;
 	return this;
 }
-std::string AccessOperatorNode::type(SymbolTable* symT) const {
+std::string AccessOperatorNode::type() const {
+	return this->_type;
+}
+std::string AccessOperatorNode::check_type() {
 	switch(this->_operator) {
 		case TreeNode::ID :
-			return this->_left->type(symT);
+			return this->_type = this->_left->type();
 			break;
-		case TreeNode::ARRAY :
+		case TreeNode::ARRAY : {
+			std::cout << "array" << std::endl;
 			if (this->_leftLeaf) {
-				if(!symT->isArray(this->_leftId)) {
+				if(!symbol_table.isArray(this->_leftId)) {
 					error_list.push_back(std::pair<int, std::string>(yylineno, "Variable \"" + this->_leftId + "\" is not an array."));
-					return "error";
+					return this->_type = "error";
 				}
-				return symT->findVariable(this->_leftId)->varType;
-			} else {
-				auto type = this->_left->type(symT);
-				if (symT->find(type) == SymbolTable::VARIABLE /*&& symT->findVariable(type).isArray()*/) {
-					return symT->findStructure(type)->find_member(this->_rightId);
-				}
+				return this->_type = symbol_table.findVariable(this->_leftId)->varType;
+			} 
+			auto type = this->_left->type();
+			auto struc = symbol_table.findStructure(type);
+			if(struc == nullptr) {
+				error_list.push_back(std::pair<int, std::string>(yylineno, "Invalid access."));
+				return this->_type = "error";
 			}
+			return this->_type = symbol_table.findStructure(type)->find_member(this->_rightId);
 			break;
+		}
 		case TreeNode::STRUCT : {
-			auto struct_type = this->_leftLeaf ? symT->findVariable(this->_leftId)->varType : this->_left->type(symT);
-			auto struc = symT->findStructure(struct_type);
+			auto struct_type = this->_leftLeaf ? symbol_table.findVariable(this->_leftId)->varType : this->_left->type();
+			auto struc = symbol_table.findStructure(struct_type);
 			if(struc == nullptr) {
 				auto erromsg = this->_leftLeaf ? "Variable \"" + this->_leftId + "\" is not a struct." : "Invalid access to a non Struct.";
 				error_list.push_back(std::pair<int, std::string>(yylineno, erromsg));
-				return "error";
+				return this->_type = "error";
 			}
 			auto typeMember = struc->find_member(this->_rightId);
 			if(typeMember == "") {
 				error_list.push_back(std::pair<int, std::string>(yylineno, "\"" + this->_rightId + "\" is not a member of \"" + struct_type + "\"."));
-				return "error";
+				return this->_type = "error";
 			}
-			return typeMember;
+			return this->_type = typeMember;
 			break;
 		}
 		case TreeNode::CALL :
 			if (this->_leftLeaf) {
-				return symT->findFunction(this->_leftId)->returnType;
+				return this->_type = symbol_table.findFunction(this->_leftId)->returnType;
 			} else {
 				error_list.push_back(std::pair<int, std::string>(yylineno, "Identifier \"" + this->_leftId + "\" is not a function."));
-				return "error";
+				return this->_type = "error";
 			}
 			break;
 	}
-	return "error";
+	return this->_type = "error";
 }
 
 FunctionDeclarationNode::FunctionDeclarationNode(const char* name, const char* return_type, const std::deque<const VariableNode*>& parameters, const std::deque<const TreeNode*>* statements) {
@@ -171,8 +183,8 @@ StructNode::~StructNode(){}
 IdNode::IdNode(const char* name) {
 	this->_name = name;
 }
-std::string IdNode::type(SymbolTable* symT) const {
-	return symT->findVariable(this->_name)->varType;
+std::string IdNode::type() const {
+	return symbol_table.findVariable(this->_name)->varType;
 }
 IdNode::~IdNode(){}
 

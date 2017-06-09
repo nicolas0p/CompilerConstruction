@@ -55,7 +55,7 @@ struct function {
 		}
 
 		for(size_t i = 0; i < parameters.size(); ++i) {
-			if(parameters.at(i).second != arguments.at(i)->type(symbol_table)) {
+			if(parameters.at(i).second != arguments.at(i)->type()) {
 				return false;
 			}
 		}

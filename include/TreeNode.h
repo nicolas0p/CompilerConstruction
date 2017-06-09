@@ -28,7 +28,7 @@ class TreeNode
 			RETURN, FOR, WHILE, IF, ELSE, BREAK
 		};
 
-		std::string type(SymbolTable* symT) const;
+		std::string type() const;
 };
 
 class VariableNode : public TreeNode {
@@ -38,7 +38,6 @@ class VariableNode : public TreeNode {
 
         std::string name() const {return std::string{_name};};
         std::string type() const {return std::string{_type};};
-		std::string type(SymbolTable* symT) const {return this->type();};
 
 	private:
 		std::string _type;
@@ -54,7 +53,6 @@ class LiteralNode : public TreeNode {
 		~LiteralNode();
 
 		std::string type() const {return std::string{_type};};
-		std::string type(SymbolTable* symT) const {return this->type();};
 	private:
 		std::string _type;
 		std::string _s_value;
@@ -68,7 +66,7 @@ class IdNode : public TreeNode {
 		IdNode(const char* name);
 		~IdNode();
 
-		std::string type(SymbolTable* symT) const;
+		std::string type() const;
 		std::string _name;
 };
 
@@ -78,7 +76,7 @@ class OperatorNode : public TreeNode {
 		~OperatorNode();
 
 		OperatorNode* set_left_child(const TreeNode* node);
-		std::string type(SymbolTable* symT) const;
+		std::string type() const;
 
 		const TreeNode* _left;
 };
@@ -88,7 +86,7 @@ class BinaryOperatorNode : public OperatorNode {
 		BinaryOperatorNode(const Operator& op);
 		~BinaryOperatorNode();
 
-		std::string type(SymbolTable* symT) const;
+		std::string type() const;
 
 		BinaryOperatorNode* set_children(const TreeNode* node1, const TreeNode* node2);
 		BinaryOperatorNode* set_right_child(const TreeNode* node);
@@ -103,7 +101,7 @@ class UnaryOperatorNode : public OperatorNode {
 		~UnaryOperatorNode();
 		UnaryOperatorNode* set_left_child(const TreeNode* node);
 
-		std::string type(SymbolTable* symT) const;
+		std::string type() const;
 	private:
 		UnaryOperator _operator;
 };
@@ -119,10 +117,12 @@ class AccessOperatorNode : public OperatorNode {
 		AccessOperatorNode* set_right_child(const TreeNode* numExpression);
 		AccessOperatorNode* set_right_child(const std::deque<const TreeNode*>* parameters);
 
-		std::string type(SymbolTable* symT) const;
+		std::string type() const;
+		std::string check_type();
 	private:
 		std::string _leftId;
 		std::string _rightId;
+		std::string _type;
 		AccessOperator _operator;
 		bool _leftLeaf;
 		const TreeNode* _right;
