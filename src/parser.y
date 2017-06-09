@@ -449,6 +449,9 @@ mutableOrFunctionCall:
 			$$ = $5 != nullptr ? $5->set_left_child(cOp) : cOp;
 		}
 		| ID access {
+			if(symbol_table.findVariable($1) == nullptr) {
+				error_list.push_back(std::pair<int, std::string>(yylineno, "Variable \"" + std::string($1) + "\" used before being declared."));
+			}
 			$$ = $2 != nullptr ? $2->set_left_child(new IdNode($1)) : (new AccessOperatorNode(TreeNode::ID))->set_left_child(new IdNode($1));
 		}
 		;

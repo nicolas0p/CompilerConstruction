@@ -33,6 +33,8 @@ structure* SymbolTable::findStructure(std::string name)
 {
     std::deque<ScopeSymbolTable>::iterator it = scopeTables.begin();
 
+	name.substr(0, name.find_first_of('['));
+
     while (it != scopeTables.end()) {
         structure* struc = it->findStructure(name);
         if (struc) {
