@@ -76,7 +76,7 @@ class OperatorNode : public TreeNode {
 		~OperatorNode();
 
 		OperatorNode* set_left_child(const TreeNode* node);
-		std::string type() const;
+		virtual std::string type() const;
 
 		const TreeNode* _left;
 };
@@ -86,7 +86,7 @@ class BinaryOperatorNode : public OperatorNode {
 		BinaryOperatorNode(const Operator& op);
 		~BinaryOperatorNode();
 
-		virtual std::string type() const;
+		std::string type() const;
 
 		BinaryOperatorNode* set_children(const TreeNode* node1, const TreeNode* node2);
 		BinaryOperatorNode* set_right_child(const TreeNode* node);

@@ -126,7 +126,6 @@ std::string AccessOperatorNode::check_type() {
 			return this->_type = this->_left->type();
 			break;
 		case TreeNode::ARRAY : {
-			std::cout << "array" << std::endl;
 			if (this->_leftLeaf) {
 				if(!symbol_table.isArray(this->_leftId)) {
 					error_list.push_back(std::pair<int, std::string>(yylineno, "Variable \"" + this->_leftId + "\" is not an array."));

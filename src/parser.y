@@ -332,7 +332,7 @@ breakStatement:
 returnStatement:
 		RETURN expression[exp] {
 			if($[exp]->type() != current_return_type) {
-				error_list.push_back(std::pair<int, std::string>(yylineno, "Return type \"" + std::string($[exp]->type()) + "\" does not match function's declaration \"" + current_return_type + "\"."));
+				error_list.push_back(std::pair<int, std::string>(yylineno, "Return type \"" + $[exp]->type() + "\" does not match function's declaration \"" + current_return_type + "\"."));
 			}
 			$$ = (new ReservedWordNode(TreeNode::RETURN))->insert_child($2);
 		}
@@ -518,8 +518,8 @@ booleanExpression:
 		| mutableOrFunctionCall boolRelOp {$$ = $2 != nullptr ? $2->set_left_child($1) : $1;}
 		| numLiteral numOp numRelOp1 {$$ = $2 != nullptr ? $3->set_left_child($2->set_left_child($1)) : $3->set_left_child($1);}
 		| OP_PARENS booleanExpression CL_PARENS boolOp {$$ = $4 != nullptr ? $4->set_left_child($2) : $2;}
-		| TRUE boolOp {$$ = $2 != nullptr ? $2->set_left_child(new LiteralNode("boolean", true)) : (TreeNode*)new LiteralNode("BOOLEAN", true);}
-		| FALSE boolOp {$$ = $2 != nullptr ? $2->set_left_child(new LiteralNode("boolean", false)) : (TreeNode*)new LiteralNode("BOOLEAN", false);}
+		| TRUE boolOp {$$ = $2 != nullptr ? $2->set_left_child(new LiteralNode("boolean", true)) : (TreeNode*)new LiteralNode("boolean", true);}
+		| FALSE boolOp {$$ = $2 != nullptr ? $2->set_left_child(new LiteralNode("boolean", false)) : (TreeNode*)new LiteralNode("boolean", false);}
 		;
 
 boolOp:
@@ -539,8 +539,8 @@ boolRelOp:
 
 boolRelOp1:
 		numExpression boolOp {$$ = $2 != nullptr ? $2->set_left_child($1) : $1;}
-		| TRUE boolOp {$$ = $2 != nullptr ? $2->set_left_child(new LiteralNode("BOOLEAN", true)) : (TreeNode*)new LiteralNode("BOOLEAN", true);}
-		| FALSE boolOp {$$ = $2 != nullptr ? $2->set_left_child(new LiteralNode("BOOLEAN", false)) : (TreeNode*)new LiteralNode("BOOLEAN", false);}
+		| TRUE boolOp {$$ = $2 != nullptr ? $2->set_left_child(new LiteralNode("boolean", true)) : (TreeNode*)new LiteralNode("boolean", true);}
+		| FALSE boolOp {$$ = $2 != nullptr ? $2->set_left_child(new LiteralNode("boolean", false)) : (TreeNode*)new LiteralNode("boolean", false);}
 		;
 
 boolRelOp2:
