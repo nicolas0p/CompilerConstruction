@@ -67,6 +67,7 @@ class IdNode : public TreeNode {
 		~IdNode();
 
 		std::string type() const;
+		std::string check_type();
 		std::string _name;
 };
 
@@ -87,10 +88,13 @@ class BinaryOperatorNode : public OperatorNode {
 		~BinaryOperatorNode();
 
 		std::string type() const;
+		std::string check_type();
 
 		BinaryOperatorNode* set_children(const TreeNode* node1, const TreeNode* node2);
 		BinaryOperatorNode* set_right_child(const TreeNode* node);
+		BinaryOperatorNode* set_left_child(const TreeNode* node);
 	private:
+		std::string _type;
 		Operator _operator;
 		const TreeNode* _right;
 };

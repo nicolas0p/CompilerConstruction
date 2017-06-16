@@ -562,7 +562,7 @@ relOpNum:
 
 numExpression:
 		unaryNumOp unaryNumExpression numOp {$1->set_left_child($2); $$ = $3 != nullptr ? (TreeNode*)$3->set_left_child($1) : $1;}
-		| mutableOrFunctionCall numOp {$$ = $2 != nullptr ? $2->set_left_child($1) : $1;}
+		| mutableOrFunctionCall numOp {$$ = $2 != nullptr ? dynamic_cast<OperatorNode*>($2->set_left_child($1)) : $1;}
 		| OP_PARENS numExpression CL_PARENS numOp {$$ = $4 != nullptr ? $4->set_left_child($2) : $2;}
 		| numLiteral numOp {$$ = $2 != nullptr ? $2->set_left_child($1) : (TreeNode*)$1;}
 		;

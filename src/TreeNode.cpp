@@ -54,10 +54,11 @@ BinaryOperatorNode::BinaryOperatorNode(const Operator& op) {
 	this->_operator = op;
 }
 BinaryOperatorNode::~BinaryOperatorNode(){}
-// BinaryOperatorNode* BinaryOperatorNode::set_left_child(const TreeNode* node) {
-// 	this->_left = node;
-// 	return this;
-// }
+BinaryOperatorNode* BinaryOperatorNode::set_left_child(const TreeNode* node) {
+	this->_left = node;
+	this->check_type();
+	return this;
+}
 BinaryOperatorNode* BinaryOperatorNode::set_right_child(const TreeNode* node) {
 	this->_right = node;
 	return this;
@@ -65,14 +66,18 @@ BinaryOperatorNode* BinaryOperatorNode::set_right_child(const TreeNode* node) {
 BinaryOperatorNode* BinaryOperatorNode::set_children(const TreeNode* node1, const TreeNode* node2) {
 	this->_left = node1;
 	this->_right = node2;
+	this->check_type();
 	return this;
 }
 std::string BinaryOperatorNode::type() const {
+	return this->_type;
+}
+std::string BinaryOperatorNode::check_type() {
 	if (_left->type() == _right->type()) {
-		return _left->type();
+		return this->_type = _left->type();
 	}
 	error_list.push_back(std::pair<int, std::string>(yylineno, "Binary operation with two different types."));
-	return "error";
+	return this->_type = "error";
 }
 
 UnaryOperatorNode::UnaryOperatorNode(const UnaryOperator& op) {
