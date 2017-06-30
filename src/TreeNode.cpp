@@ -165,6 +165,11 @@ std::string AccessOperatorNode::check_type() {
 		}
 		case TreeNode::CALL :
 			if (this->_leftLeaf) {
+				auto function_p = symbol_table.findFunction(this->_leftId);
+				if(function_p == nullptr) {
+					//this error is already being detected somewhere else, so we dont need to print it here
+					return "";
+				}
 				return this->_type = symbol_table.findFunction(this->_leftId)->returnType;
 			} else {
 				error_list.push_back(std::pair<int, std::string>(yylineno, "Identifier \"" + this->_leftId + "\" is not a function."));
